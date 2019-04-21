@@ -1,3 +1,10 @@
+#![allow(dead_code)]
+
+#[macro_use] extern crate nom;
+
+pub mod ast;
+pub mod lex;
+
 #[cfg(test)]
 mod tests {
     #[test]
