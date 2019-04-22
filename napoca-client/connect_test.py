@@ -8,8 +8,8 @@ napoca_server = subprocess.Popen(["../target/debug/napoca", "50001"])
 
 sleep(1)
 
-napoca_client = subprocess.run(["node", "./connect_test.js", "50001"])
+napoca_client_ret_code = subprocess.call(["node", "./connect_test.js", "50001"])
 
 napoca_server.kill()
 
-exit(napoca_client.returncode)
+exit(napoca_client_ret_code)
