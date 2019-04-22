@@ -1,4 +1,11 @@
-language: rust
+dist: xenial
+matrix:
+  include:
+    - language: python
+      python: 3.7
+
+    - language: rust
+
 script:
 # Install protocol buffer compiler
   - PROTOC_ZIP=protoc-3.7.1-linux-x86_64.zip

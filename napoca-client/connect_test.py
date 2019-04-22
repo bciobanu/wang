@@ -1,14 +1,14 @@
-#! /usr/bin/env python3
+#! /usr/bin/env python3.7
 
+import subprocess
 from time import sleep
-from subprocess import Popen, run
 
 # Start a napoca server on port 50001.
-napoca_server = Popen(["../target/debug/napoca", "50001"])
+napoca_server = subprocess.Popen(["../target/debug/napoca", "50001"])
 
 sleep(1)
 
-napoca_client = run(["node", "./connect_test.js", "50001"])
+napoca_client = subprocess.run(["node", "./connect_test.js", "50001"])
 
 napoca_server.kill()
 
