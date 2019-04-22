@@ -9,6 +9,7 @@ extern crate tls_api_native_tls;
 pub mod napoca;
 pub mod napoca_grpc;
 
+use std::env;
 use std::thread;
 
 use grpc::ServerBuilder;
@@ -42,7 +43,13 @@ impl Napoca for NapocaImpl {
 }
 
 fn main() {
-    let port = 50001;
+    let args: Vec<String> = env::args().collect();
+    let port: u16;
+    if args.len() >= 2 {
+        port = args[1].parse().unwrap();
+    } else {
+        port = 50001;
+    }
 
     let mut server: ServerBuilder<TlsAcceptor> = grpc::ServerBuilder::new();
     server.http.set_port(port);
