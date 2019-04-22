@@ -4,7 +4,7 @@
   "description": "Client for the napoca proxy server",
   "main": "index.js",
   "scripts": {
-    "test": "./connect_test.py"
+    "test": "python3 connect_test.py"
   },
   "author": "",
   "license": "ISC",
