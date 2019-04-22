@@ -1,3 +1,6 @@
+extern crate simple_logger;
+#[macro_use] extern crate log;
+
 extern crate protobuf;
 extern crate grpc;
 extern crate futures;
@@ -30,8 +33,7 @@ impl Napoca for NapocaImpl {
 
         let wang_code = req.take_wang_code();
 
-        // TODO(darius98): Use a logging library
-        println!("Wang request with code '{}'", wang_code);
+        info!(target: "requests", "Wang request with code of length = '{}'", wang_code.len());
 
         // TODO(darius98): Call AndreiNet's implementation here!
         let tikz = wang_code;
@@ -43,6 +45,8 @@ impl Napoca for NapocaImpl {
 }
 
 fn main() {
+    simple_logger::init_with_level(log::Level::Info).unwrap();
+
     let args: Vec<String> = env::args().collect();
     let port: u16;
     if args.len() >= 2 {
@@ -58,8 +62,7 @@ fn main() {
 
     let _server = server.build().expect("server");
 
-    // TODO(darius98): Use a logging library
-    println!("Napoca server started on port {}", port);
+    info!("Napoca server started on port {}", port);
 
     loop {
         thread::park();
