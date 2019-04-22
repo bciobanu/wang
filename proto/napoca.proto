@@ -3,16 +3,23 @@ syntax="proto3";
 package wang;
 
 message WangRequest {
-    // TODO: Add some metadata?
-
     string wang_code = 1;
 }
 
-message WangResponse {
-    // TODO: Add some metadata?
+message Error {
+    enum Code {
+        UNDEFINED = 0;
+        NETWORK_ERROR = 1;
+        // Syntax errors / other errors from the tikz compiler should come here.
+    }
 
+    Code code = 1;
+    string description = 2;
+}
+
+message WangResponse {
     string tikz = 1;
-    repeated string errors = 2;
+    repeated Error errors = 2;
 }
 
 service Napoca {
