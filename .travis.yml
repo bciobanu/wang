@@ -1,8 +1,14 @@
 language: rust
 script:
+# Install protocol buffer compiler
   - PROTOC_ZIP=protoc-3.7.1-linux-x86_64.zip
   - curl -OL https://github.com/google/protobuf/releases/download/v3.7.1/$PROTOC_ZIP
   - sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
   - rm -f $PROTOC_ZIP
+# Install NodeJS
+  - sudo apt-get install npm
+# Build & test rust code
   - cargo build --verbose --all
   - cargo test --verbose --all
+# Build & test the Napoca client
+  - cd napoca-client && npm install && npm test && cd ..
