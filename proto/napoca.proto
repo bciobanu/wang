@@ -1,0 +1,20 @@
+syntax="proto3";
+
+package wang;
+
+message WangRequest {
+    // TODO: Add some metadata?
+
+    string wang_code = 1;
+}
+
+message WangResponse {
+    // TODO: Add some metadata?
+
+    string tikz = 1;
+    repeated string errors = 2;
+}
+
+service Napoca {
+    rpc parse(WangRequest) returns (WangResponse);
+}
