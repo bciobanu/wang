@@ -26,8 +26,17 @@ struct NapocaImpl;
 impl Napoca for NapocaImpl {
     fn parse(&self, _: RequestOptions, mut req: WangRequest) -> SingleResponse<WangResponse> {
         let mut r = WangResponse::new();
-        println!("Wang request with code '{}'", req.get_wang_code());
-        r.set_tikz(req.take_wang_code());
+
+        let wang_code = req.take_wang_code();
+
+        // TODO(darius98): Use a logging library
+        println!("Wang request with code '{}'", wang_code);
+
+        // TODO(darius98): Call AndreiNet's implementation here!
+        let tikz = wang_code;
+
+        r.set_tikz(tikz);
+
         return SingleResponse::completed(r);
     }
 }
@@ -42,6 +51,7 @@ fn main() {
 
     let _server = server.build().expect("server");
 
+    // TODO(darius98): Use a logging library
     println!("Napoca server started on port {}", port);
 
     loop {
