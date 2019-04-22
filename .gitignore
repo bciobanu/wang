@@ -16,3 +16,6 @@ wang.iml
 # Protocol buffers auto-generated code
 /napoca/src/napoca.rs
 /napoca/src/napoca_grpc.rs
+
+/napoca-client/package-lock.json
+/napoca-client/node_modules/
