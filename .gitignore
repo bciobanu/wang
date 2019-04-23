@@ -19,3 +19,7 @@ wang.iml
 
 /napoca-client/package-lock.json
 /napoca-client/node_modules/
+
+/beetle/package-lock.json
+/beetle/node_modules/
+/beetle/sqlite.db
