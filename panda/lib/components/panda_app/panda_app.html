@@ -15,11 +15,12 @@
 <div *ngIf="attemptedInitialLoad && authService.isAuthenticated">
     <p>Is authenticated!</p>
 </div>
-<div *ngIf="attemptedInitialLoad && !authService.isAuthenticated" style="display: flex; margin-top: 50px;">
+<div *ngIf="attemptedInitialLoad && !authService.isAuthenticated"
+     style="display: flex; margin-top: 50px; justify-content: space-around;">
     <login-form [loginError]="loginError" (loginSubmit)="onLoginCredentials($event)" style="flex: 10;"></login-form>
-    <h1 style="flex: 1; padding: 20px;">or</h1>
+    <h1 style="flex: 1; padding-top: 20px; max-width: 40px;">or</h1>
     <register-form [registrationError]="registrationError"
-                   [registrationSuccessful] ="registrationSuccessful"
+                   [registrationSuccessful]="registrationSuccessful"
                    (registerSubmit)="onRegisterCredentials($event)"
                    style="flex: 10;"></register-form>
 </div>

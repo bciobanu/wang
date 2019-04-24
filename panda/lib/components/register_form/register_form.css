@@ -1,4 +1,6 @@
 :host {
+    max-width: 500px;
+    box-shadow: 2px 4px 4px 2px #dcdcdc;
 }
 
 .form-container {
