@@ -1,10 +1,10 @@
 const DaoError = require('../../dao/commons/daoError')
 
 class ControllerCommon {
-    findSuccess(res) {
+    findSuccess(res, serializer) {
         return (result) => {
             res.status(200)
-            res.json(result)
+            res.json(serializer(result))
         }
     }
 
