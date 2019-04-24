@@ -1,0 +1,19 @@
+name: panda
+description: Web-app client for the Wang project.
+version: 1.0.0
+
+environment:
+  sdk: '>=2.2.0 <3.0.0'
+
+dependencies:
+  angular: ^5.0.0
+  angular_forms: ^2.0.0
+  angular_components: ^0.12.0
+  quiver: ^2.0.3
+dev_dependencies:
+  sass_builder: ^2.0.0
+  angular_test: ^2.0.0
+  build_runner: ^1.0.0
+  build_test: ^0.10.2
+  build_web_compilers: ^0.4.0
+  test: ^1.0.0

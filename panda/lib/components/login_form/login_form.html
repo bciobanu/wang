@@ -1,0 +1,27 @@
+<div class="form-container">
+    <div class="container">
+        <h1 style="text-align: center;">Login</h1>
+        <form (ngSubmit)="onSubmit()">
+            <div class="form-group">
+                <label for="login-username">Username</label>
+                <input type="text" class="form-control" id="login-username"
+                       [class.is-invalid]="hasLoginError"
+                       [(ngModel)]="username" ngControl="login-username">
+                <div [hidden]="!hasLoginError" class="invalid-feedback">
+                    {{loginError}}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="login-password">Password</label>
+                <input type="password" class="form-control" id="login-password"
+                       [class.is-invalid]="hasLoginError"
+                       [(ngModel)]="password" ngControl="login-password">
+            </div>
+            <div class="row">
+                <div class="col-auto">
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

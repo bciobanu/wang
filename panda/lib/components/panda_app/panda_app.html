@@ -1,0 +1,25 @@
+<header class="material-header">
+    <div class="material-header-row">
+        <span class="material-header-title app-bar-title">Wang</span>
+        <div class="material-spacer"></div>
+        <nav class="material-navigation">
+            <em>Drawing diagrams made easy</em>
+        </nav>
+    </div>
+</header>
+<div *ngIf="!attemptedInitialLoad" class="spinner-container">
+    <material-spinner style="margin-right: 10px;"></material-spinner>
+    <em>Loading...</em>
+    <material-spinner style="margin-left: 10px;"></material-spinner>
+</div>
+<div *ngIf="attemptedInitialLoad && authService.isAuthenticated">
+    <p>Is authenticated!</p>
+</div>
+<div *ngIf="attemptedInitialLoad && !authService.isAuthenticated" style="display: flex; margin-top: 50px;">
+    <login-form [loginError]="loginError" (loginSubmit)="onLoginCredentials($event)" style="flex: 10;"></login-form>
+    <h1 style="flex: 1; padding: 20px;">or</h1>
+    <register-form [registrationError]="registrationError"
+                   [registrationSuccessful] ="registrationSuccessful"
+                   (registerSubmit)="onRegisterCredentials($event)"
+                   style="flex: 10;"></register-form>
+</div>
