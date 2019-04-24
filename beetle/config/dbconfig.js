@@ -5,7 +5,7 @@ let db = new sqlite3.Database('./sqlite.db')
 let init = function () {
     db.run("CREATE TABLE if not exists user (" + 
         "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-        "username TEXT," +
+        "username TEXT UNIQUE," +
         "hashed_password TEXT" + ")"
     )
 

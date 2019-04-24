@@ -5,6 +5,7 @@ const User = require('../model/user')
 const authconfig = require('../config/authconfig')
 
 const jwt = require('jsonwebtoken')
+const bcrypt = require('bcryptjs')
 
 class AuthController {
     constructor() {
@@ -13,22 +14,36 @@ class AuthController {
     }
 
     register(req, res) {
-        this.userDao.findByUsername(req.body.username)
-            .then(this.common.alreadyExistsError(res))
-            .catch(error => {
-                let user = new User()
-                user.username = req.body.username
-                user.hashedPassword = req.body.hashed_password
-                this.userDao.create(user)
-                    .then(function (result) {
-                        let token = jwt.sign({id: result}, 
-                            authconfig.secret, 
-                            {expiresIn: 86400}
-                        )
-                        res.status(200).json({auth: true, token: token})
-                    })
-                    .catch(this.common.serverError(res))
+        let hashedPassword = bcrypt.hashSync(req.body.password, 8)
+        let user = new User()
+        user.username = req.body.username
+        user.hashedPassword = hashedPassword
+        this.userDao.create(user)
+            .then(result => {
+                let token = jwt.sign({id: result}, 
+                    authconfig.secret, 
+                    {expiresIn: 86400}
+                )
+                this.common.authorized(res)(token)
             })
+            .catch(this.common.serverError(res))
+    }
+
+    login(req, res) {
+        this.userDao.findByUsername(req.body.username)
+            .then(user => {
+                let passwordIsValid = bcrypt.compareSync(req.body.password, user.hashedPassword)
+                if (!passwordIsValid) {
+                    this.common.unauthorizedError(res)()
+                } else {
+                    let token = jwt.sign({id: user.id}, 
+                        authconfig.secret, 
+                        {expiresIn: 86400}
+                    )
+                    this.common.authorized(res)(token)
+                }
+            })
+            .catch(this.common.serverError(res))
     }
 }
 

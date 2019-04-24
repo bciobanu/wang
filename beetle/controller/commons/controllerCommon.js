@@ -29,10 +29,17 @@ class ControllerCommon {
         }
     }
 
-    alreadyExistsError(res) {
-        return (result) => {
-            res.status(409)
-            res.json(new DaoError(409, "Entity already exists"))
+    unauthorizedError(res) {
+        return () => {
+            res.status(401)
+            res.json(new DaoError(401, "Unauthorized"))
+        }
+    }
+
+    authorized(res) {
+        return (token) => {
+            res.status(200)
+            res.json({auth: true, token: token})
         }
     }
 }
