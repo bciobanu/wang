@@ -29,7 +29,7 @@ class FigureController {
     }
 
     update(req, res) {
-        let figure = new Figure(req.params.id, req.body.code, req.userId)
+        let figure = new Figure(req.params.id, req.body.name, req.body.code, req.userId)
         return this.figureDao.update(figure)
             .then(this.common.editSuccess(res))
             .catch(this.common.serverError(res))
@@ -37,6 +37,7 @@ class FigureController {
 
     create(req, res) {
         let figure = new Figure()
+        figure.name = req.body.name
         figure.code = req.body.code
         figure.userId = req.userId
         return this.figureDao.create(figure)

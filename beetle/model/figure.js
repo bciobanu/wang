@@ -1,8 +1,9 @@
 // Figure entity
 
 class Figure {
-    constructor(id, code, userId) {
+    constructor(id, name, code, userId) {
         this.id = id
+        this.name = name
         this.code = code
         this.userId = userId
     }
