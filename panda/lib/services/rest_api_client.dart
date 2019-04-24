@@ -19,9 +19,17 @@ class RestApiClient {
       @Inject(apiServerAddress) this._apiServerAddress, this._authService);
 
   Future<void> fetchOwnUser() async {
-//    final getOwnUserResponse = await get('/own_user');
-    await Future.delayed(const Duration(milliseconds: 200));
-    _authService.setNotAuthenticated();
+    if (!_authService.hasAuthToken) {
+      return;
+    }
+    final response = await get('/user');
+    if (response.statusCode == 200) {
+      _authService.setAuthenticated(
+          authToken: _authService.authToken,
+          username: JsonDecoder().convert(response.body)['username']);
+    } else {
+      _authService.setNotAuthenticated();
+    }
   }
 
   Future<Optional<String>> register(String username, String password) async {
@@ -121,7 +129,7 @@ class RestApiClient {
     }
 //    enhancedHeaders['Content-Type'] = 'application/json';
     if (_authService.hasAuthToken) {
-      enhancedHeaders['Authentication'] = 'Bearer ${_authService.authToken}';
+      enhancedHeaders['x-access-token'] = _authService.authToken;
     }
     return enhancedHeaders;
   }
