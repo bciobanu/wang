@@ -1,0 +1,10 @@
+:host {
+    display: block;
+    margin-top: 20px;
+}
+
+.wang-container {
+    margin: 0 auto;
+    width: 95%;
+    max-width: 900px;
+}
