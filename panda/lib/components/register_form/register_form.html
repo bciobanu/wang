@@ -1,0 +1,39 @@
+<div class="form-container">
+    <div class="container">
+        <h1 style="text-align: center;">Register</h1>
+        <form (ngSubmit)="onSubmit()">
+            <div class="form-group">
+                <label for="register-username">Username</label>
+                <input type="text" class="form-control" id="register-username"
+                       [class.is-invalid]="hasRegistrationError"
+                       [(ngModel)]="username" ngControl="register-username">
+                <div [hidden]="!hasRegistrationError" class="invalid-feedback">
+                    {{registrationError}}
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="register-password">Password</label>
+                <input type="password" class="form-control" id="register-password"
+                       [class.is-invalid]="hasRegistrationError || !passwordsMatch"
+                       [(ngModel)]="password" ngControl="register-password">
+            </div>
+            <div class="form-group">
+                <label for="register-retype-password">Re-enter password</label>
+                <input type="password" class="form-control" id="register-retype-password"
+                       [class.is-invalid]="hasRegistrationError || !passwordsMatch"
+                       [(ngModel)]="retypedPassword" ngControl="register-retype-password">
+                <div [hidden]="passwordsMatch" class="invalid-feedback">
+                    Passwords don't match.
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-auto">
+                    <button type="submit" [disabled]="!passwordsMatch" class="btn btn-primary">Submit</button>
+                    <div [hidden]="!registrationSuccessful" style="font-size: 0.8em;">
+                        Registration successful. Please log-in.
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>

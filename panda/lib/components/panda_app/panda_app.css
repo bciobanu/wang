@@ -1,0 +1,9 @@
+.app-bar-title {
+    left: 10px !important;
+}
+
+.spinner-container {
+    text-align: center;
+    font-size: 2em;
+    margin-top: 100px;
+}

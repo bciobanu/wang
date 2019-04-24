@@ -2,6 +2,8 @@
 [![Build Status](https://travis-ci.org/bciobanu/wang.svg?branch=master)](https://travis-ci.org/bciobanu/wang)
 
 # Build
+
+## Napoca
 To build the Napoca server locally, a `protoc` executable is required,
 at least at version `3.0`.
 - On Mac OS X: `brew install protobuf` / `brew upgrade protobuf`.
@@ -20,3 +22,10 @@ sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
 rm -f $PROTOC_ZIP
 ```
 Then, just running `cargo build` will generate the required Protocol Buffer files.
+
+## Panda
+To build the front-end of the project, you first need to install the `Dart` language:
+- https://webdev.dartlang.org/guides/get-started#2-install-dart
+
+For development, the best way to run Panda is through Dart's `webdev` compiler:
+- `webdev panda/web:8080`
