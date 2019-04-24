@@ -1,4 +1,6 @@
 import 'package:angular/angular.dart';
+import 'package:angular_components/material_button/material_fab.dart';
+import 'package:angular_components/material_icon/material_icon.dart';
 import 'package:angular_components/material_list/material_list.dart';
 import 'package:angular_components/material_list/material_list_item.dart';
 import 'package:angular_components/material_spinner/material_spinner.dart';
@@ -13,6 +15,8 @@ import 'package:panda/services/figures_service.dart';
     MaterialSpinnerComponent,
     MaterialListComponent,
     MaterialListItemComponent,
+    MaterialIconComponent,
+    MaterialFabComponent,
     FigureEditorComponent,
     coreDirectives,
   ],
@@ -31,5 +35,9 @@ class WangPageComponent implements OnInit {
     await _figuresService.reloadFigures();
     figures = _figuresService.figures;
     loadedFigures = true;
+  }
+
+  void createFigure() async {
+    await _figuresService.createNewFigure();
   }
 }

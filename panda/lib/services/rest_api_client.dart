@@ -82,6 +82,14 @@ class RestApiClient {
     return JsonDecoder().convert((await get('/figure')).body);
   }
 
+  Future<int> createFigure(String name) async {
+    return JsonDecoder().convert((await post('/figure', body: {
+      "name": name,
+      "code": "",
+    }))
+        .body);
+  }
+
   Future<Response> get(url) async {
     final response = await _browserClient.get(_apiServerAddress + url,
         headers: _enhanceHeaders({}));

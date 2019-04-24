@@ -11,6 +11,11 @@
                 </material-list-item>
             </material-list>
             <div *ngIf="figures.isEmpty" style="text-align: center; padding-top: 10px;"><em>No figures.</em></div>
+            <div style="text-align: center;">
+                <material-fab mini style="background-color: #81c784" (trigger)="createFigure()">
+                    <material-icon icon="add"></material-icon>
+                </material-fab>
+            </div>
         </div>
         <div style="flex: 3">
             <figure-editor [figureId]="highlightedFigureId"></figure-editor>
