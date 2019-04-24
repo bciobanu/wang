@@ -1,0 +1,9 @@
+<div class="centered" *ngIf="!hasHighlightedFigure">
+    <em>No figure selected. Select a figure from the list to view & edit its code here.</em>
+</div>
+<div class="centered" *ngIf="hasHighlightedFigure && !isFigureLoaded">
+    <material-spinner></material-spinner>
+</div>
+<div class="editor-container" *ngIf="hasHighlightedFigure && isFigureLoaded">
+    <pre>{{figure.code}}</pre>
+</div>

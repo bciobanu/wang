@@ -3,6 +3,7 @@ import 'package:panda/common/credentials.dart';
 import 'package:angular_components/material_spinner/material_spinner.dart';
 import 'package:panda/components/login_form/login_form.dart';
 import 'package:panda/components/register_form/register_form.dart';
+import 'package:panda/components/wang_page/wang_page.dart';
 import 'package:panda/services/auth_service.dart';
 import 'package:panda/services/rest_api_client.dart';
 
@@ -13,6 +14,7 @@ import 'package:panda/services/rest_api_client.dart';
     MaterialSpinnerComponent,
     LoginFormComponent,
     RegisterFormComponent,
+    WangPageComponent,
     coreDirectives,
   ],
   styleUrls: [

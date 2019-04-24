@@ -17,7 +17,7 @@
     <material-spinner style="margin-left: 10px;"></material-spinner>
 </div>
 <div *ngIf="attemptedInitialLoad && authService.isAuthenticated">
-    <p>Is authenticated!</p>
+    <wang-page></wang-page>
 </div>
 <div *ngIf="attemptedInitialLoad && !authService.isAuthenticated"
      style="display: flex; margin-top: 50px; justify-content: space-around;">
