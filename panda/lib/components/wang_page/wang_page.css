@@ -8,26 +8,3 @@
     width: 95%;
     max-width: 900px;
 }
-
-.figures-list-header {
-    text-align: center;
-    padding: 4px 8px;
-    border: 1px solid black;
-}
-
-.figures-list-item {
-    text-align: center;
-    padding: 4px 8px;
-    border: 1px solid black;
-    text-overflow: ellipsis;
-    cursor: pointer;
-}
-
-.highlighted-figures-list-item {
-    background: #ddd;
-}
-
-.figures-list-item:hover {
-    transition: background-color 0.5s;
-    background: #ddd;
-}

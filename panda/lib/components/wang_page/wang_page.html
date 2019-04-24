@@ -1,15 +1,15 @@
 <div class="wang-container">
-    <h3>Logged in as <em>{{username}}</em></h3>
     <div *ngIf="!loadedFigures" style="margin: 0 auto;">
         <material-spinner></material-spinner>
     </div>
     <div *ngIf="loadedFigures" style="display: flex">
         <div style="flex: 1">
-            <div class="figures-list-header"><strong>My figures</strong></div>
-            <div class="figures-list-item" *ngFor="let figure of figures"
-                 [class.highlighted-figures-list-item]="figure.id == highlightedFigureId"
-                 (click)="highlightedFigureId = figure.id">{{figure.name}}
-            </div>
+            <material-list *ngIf="figures.isNotEmpty">
+                <div label>My figures</div>
+                <material-list-item *ngFor="let figure of figures" (trigger)="highlightedFigureId = figure.id">
+                    {{figure.name}}
+                </material-list-item>
+            </material-list>
             <div *ngIf="figures.isEmpty" style="text-align: center; padding-top: 10px;"><em>No figures.</em></div>
         </div>
         <div style="flex: 3">
