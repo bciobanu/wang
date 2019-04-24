@@ -44,7 +44,8 @@ class PandaAppComponent implements OnInit {
     if (loginResponse.hasError) {
       loginError = loginResponse.error;
     } else {
-      authService.setAuthenticated(loginResponse);
+      authService.setAuthenticated(
+          authToken: loginResponse.authToken, username: loginResponse.username);
     }
   }
 

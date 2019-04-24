@@ -25,12 +25,12 @@ class RestApiClient {
   }
 
   Future<Optional<String>> register(String username, String password) async {
-    final response = await post('/auth/register', body: {
-      'username': username,
-      'password': password
-    });
+    final response = await post('/auth/register',
+        body: {'username': username, 'password': password});
     if (response.statusCode == 200) {
-      // Success.
+      _authService.setAuthenticated(
+          authToken: JsonDecoder().convert(response.body)['authToken'],
+          username: username);
       return Optional<String>.absent();
     }
     // TODO: Actually send an error message.
@@ -118,4 +118,19 @@ class RestApiClient {
     }
     return enhancedHeaders;
   }
+}
+
+class LoginResponse {
+  final String error;
+
+  final String authToken;
+  final String username;
+
+  LoginResponse.unsuccessful(this.error)
+      : authToken = null,
+        username = null;
+
+  LoginResponse.successful(this.authToken, this.username) : error = null;
+
+  bool get hasError => error?.isNotEmpty;
 }
