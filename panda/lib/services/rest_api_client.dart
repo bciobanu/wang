@@ -25,14 +25,15 @@ class RestApiClient {
   }
 
   Future<Optional<String>> register(String username, String password) async {
-    final response = await post('/user', body: <String, String>{
+    final response = await post('/auth/register', body: <String, String>{
       'username': username,
-      // TODO: Fix this after it's fixed in Beetle.
-      'hashed_password': password
+      'password': password
     });
-    if (response.statusCode == 201) {
+    if (response.statusCode == 200) {
+      // Success.
       return Optional<String>.absent();
     }
+    // TODO: Actually send the error message lol.
     return Optional<String>.of("Unknown error occured.");
   }
 
