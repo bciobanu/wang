@@ -1,6 +1,11 @@
+// Load validator package
 const validator = require('validator')
 
+// methods that return middleware functions that validates input from the request
 class ValidatorFactory {
+    /**
+     * validates input for user authentication
+     */
     userAuthValidator() {
         return (req, res, next) => {
             if (!req.body.username || !req.body.password ||
@@ -14,6 +19,9 @@ class ValidatorFactory {
         }
     }
 
+    /**
+     * validates input for Figure creation / edit
+     */
     figureValidator() {
         return (req, res, next) => {
             if (req.body.name != null && 

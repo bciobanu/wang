@@ -1,3 +1,5 @@
+// DaoError entity
+
 class DaoError {
     constructor(errorCode, message) {
         this.errorCode = errorCode

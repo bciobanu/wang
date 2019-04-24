@@ -14,3 +14,5 @@ script:
   - cargo test --verbose --all
 # Build & test the Napoca client
   - cd napoca-client && npm install && npm test && cd ..
+# Build Beetle API
+  - cd beetle && npm install && cd ..

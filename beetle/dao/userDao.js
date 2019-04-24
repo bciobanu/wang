@@ -6,6 +6,11 @@ class UserDao {
         this.common = new daoCommon()
     }
 
+    /**
+     * Find the user with the specified id
+     * @param id the id of the user we want to fine
+     * @returns the found user 
+     */
     findById(id) {
         let sqlRequest = "SELECT id, username, hashed_password FROM user WHERE id=$id"
         let sqlParams = {$id: id}
@@ -14,6 +19,11 @@ class UserDao {
             new User(row.id, row.username, row.hashed_password))
     }
 
+    /**
+     * Find the user with the specified username
+     * @param username the username of the user we want to fine
+     * @returns the found user 
+     */
     findByUsername(username) {
         let sqlRequest = "SELECT id, username, hashed_password FROM user WHERE username=$username"
         let sqlParams = {$username: username}
@@ -22,6 +32,10 @@ class UserDao {
             new User(row.id, row.username, row.hashed_password))
     }
 
+    /**
+     * Get all users
+     * @returns a list of all users
+     */
     findAll() {
         let sqlRequest = "SELECT * FROM user"
         return this.common.findAll(sqlRequest, {}).then(rows => {
@@ -33,6 +47,11 @@ class UserDao {
         })
     }
 
+     /**
+     * Update a user
+     * @param User a user entity
+     * @returns irrelevant
+     */
     update(User) {
         let sqlRequest = "UPDATE user SET username=$username, hashed_password=$hashed_password " +
             "WHERE id=$id"
@@ -40,6 +59,11 @@ class UserDao {
         return this.common.run(sqlRequest, sqlParams)
     }
 
+    /**
+     * Create a user
+     * @param User a user entity (without the id field)
+     * @returns the id of the newly created user
+     */
     create(User) {
         let sqlRequest = "INSERT into user (username, hashed_password) " +
             "VALUES ($username, $hashed_password)"

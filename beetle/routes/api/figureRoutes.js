@@ -1,17 +1,26 @@
+// Load modules
 const express = require('express')
 const router = express.Router()
 
+// Load controller
 const FigureController = require('../../controller/figureController')
 const figureController = new FigureController()
 
+// Load token verifier
 const verifyToken = require('../../helpers/verifyToken')
 
+// Load validator
 const ValidatorFactory = require('../../helpers/validatorFactory')
 const validatorFactory = new ValidatorFactory()
 
+// Load napoca configuration
 const napocaConfig = require('../../config/napocaconfig')
 const napoca_client = require('napoca-client')
 const napocaClient = new napoca_client.NapocaClient("localhost:" + napocaConfig.port)
+
+/**
+ * Figure entity routes
+ */
 
 router.get('/', verifyToken, function (req, res) {
     figureController.findAll(req, res)

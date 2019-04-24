@@ -23,9 +23,13 @@ rm -f $PROTOC_ZIP
 ```
 Then, just running `cargo build` will generate the required Protocol Buffer files.
 
+## Beetle
+To build the RESTful API of the project, just run `npm install` from `beetle` directory.
+Use `npm start` to start the Node server.
+
 ## Panda
 To build the front-end of the project, you first need to install the `Dart` language:
 - https://webdev.dartlang.org/guides/get-started#2-install-dart
 
 For development, the best way to run Panda is through Dart's `webdev` compiler:
-- `webdev panda/web:8080`
+- from `panda` directory run `webdev serve web:8080`

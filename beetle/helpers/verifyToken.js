@@ -1,6 +1,10 @@
+// Load JSON Web Token
 const jwt = require('jsonwebtoken')
+
+// Load auth configuration
 const authconfig = require('../config/authconfig')
 
+// middleware method that verifies a token and identifies its owner
 function verifyToken(req, res, next) {
     let token = req.headers['x-access-token']
     if (!token)

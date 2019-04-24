@@ -1,7 +1,17 @@
+// Load db configuration
 const DB = require('../../config/dbconfig')
+
+// Load DaoError entity
 const DaoError = require('./daoError')
 
+// Common methods for DAOs
 class DaoCommon {
+    /**
+     * Find all entities that satisfy the SQL request
+     * @param sqlRequest the SQL request
+     * @param sqlParams values for the parameters from the sqlRequest
+     * @returns the found entities
+     */
     findAll(sqlRequest, sqlParams) {
         return new Promise(function (resolve, reject) {
             let statement = DB.db.prepare(sqlRequest)
@@ -17,6 +27,12 @@ class DaoCommon {
         })
     }
 
+    /**
+     * Find the first entity that satisfies the SQL request
+     * @param sqlRequest the SQL request
+     * @param sqlParams values for the parameters from the sqlRequest
+     * @returns the found entity
+     */
     findOne(sqlRequest, sqlParams) {
         return new Promise(function (resolve, reject) {
             let statement = DB.db.prepare(sqlRequest)
@@ -37,6 +53,12 @@ class DaoCommon {
         })
     }
 
+    /**
+     * Run a SQL request that modifies a table
+     * @param sqlRequest the SQL request
+     * @param sqlParams values for the parameters from the sqlRequest
+     * @returns the id of the last inserted entity
+     */
     run(sqlRequest, sqlParams) {
         return new Promise(function (resolve, reject) {
             let statement = DB.db.prepare(sqlRequest)
