@@ -28,7 +28,7 @@ class FigureDao {
     }
 
     update(Figure) {
-        let sqlRequest = "UPDATE figure SET name=$name, code=$code WHERE id=$id and user_id=$user_id"
+        let sqlRequest = "UPDATE figure SET name=IFNULL($name, name), code=IFNULL($code, code) WHERE id=$id and user_id=$user_id"
         let sqlParams = {$id: Figure.id, $name: Figure.name, $code: Figure.code, $user_id: Figure.userId}
 
         return this.common.run(sqlRequest, sqlParams)
