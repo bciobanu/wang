@@ -1,6 +1,5 @@
 <div class="form-container">
     <div class="container">
-        <h1 style="text-align: center;">Register</h1>
         <form (ngSubmit)="onSubmit()">
             <div class="form-group">
                 <label for="register-username">Username</label>
@@ -18,7 +17,7 @@
                        [(ngModel)]="password" ngControl="register-password">
             </div>
             <div class="form-group">
-                <label for="register-retype-password">Re-enter password</label>
+                <label for="register-retype-password">Confirm password</label>
                 <input type="password" class="form-control" id="register-retype-password"
                        [class.is-invalid]="hasRegistrationError || !passwordsMatch"
                        [(ngModel)]="retypedPassword" ngControl="register-retype-password">
@@ -27,8 +26,11 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-auto">
-                    <button type="submit" [disabled]="!passwordsMatch" class="btn btn-primary">Submit</button>
+                <div class="col-auto" style="text-align: center; width: 100%">
+                    <button type="submit" [disabled]="!passwordsMatch || retypedPassword.isEmpty"
+                            class="btn btn-primary">
+                        Register
+                    </button>
                     <div [hidden]="!registrationSuccessful" style="font-size: 0.8em;">
                         Registration successful. Please log-in.
                     </div>

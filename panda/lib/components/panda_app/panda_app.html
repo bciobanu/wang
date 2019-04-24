@@ -1,9 +1,13 @@
 <header class="material-header">
-    <div class="material-header-row">
+    <div class="material-header-row" style="margin-right: 0">
         <span class="material-header-title app-bar-title">Wang</span>
-        <div class="material-spacer"></div>
-        <nav class="material-navigation">
+        <nav class="material-navigation" style="position: absolute; left: 250px;">
             <em>Drawing diagrams made easy</em>
+        </nav>
+        <div class="material-spacer"></div>
+        <nav *ngIf="attemptedInitialLoad && authService.isAuthenticated" class="logout-link"
+             (click)="authService.setNotAuthenticated()">
+            <div class="logout-content">Logout</div>
         </nav>
     </div>
 </header>
@@ -18,7 +22,11 @@
 <div *ngIf="attemptedInitialLoad && !authService.isAuthenticated"
      style="display: flex; margin-top: 50px; justify-content: space-around;">
     <login-form [loginError]="loginError" (loginSubmit)="onLoginCredentials($event)" style="flex: 10;"></login-form>
-    <h1 style="flex: 1; padding-top: 20px; max-width: 40px;">or</h1>
+    <div style="display: flex; flex: 1; max-width: 40px; align-items: center;">
+        <div style="flex: 1">
+            <h1 style="text-align: center;">or</h1>
+        </div>
+    </div>
     <register-form [registrationError]="registrationError"
                    [registrationSuccessful]="registrationSuccessful"
                    (registerSubmit)="onRegisterCredentials($event)"

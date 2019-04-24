@@ -7,3 +7,21 @@
     font-size: 2em;
     margin-top: 100px;
 }
+
+.logout-link {
+    height: 100%;
+    cursor: pointer;
+    display: flex;
+    padding-left: 20px;
+    padding-right: 20px;
+    font-size: 1.2em;
+    align-items: center;
+}
+
+.logout-link:hover {
+    transition: background-color 0.5s;
+    background-color: #6b79cb;
+}
+
+.logout-content {
+}
