@@ -18,14 +18,14 @@ class RestApiClient {
   RestApiClient(
       @Inject(apiServerAddress) this._apiServerAddress, this._authService);
 
-  Future<void> getOwnUser() async {
+  Future<void> fetchOwnUser() async {
 //    final getOwnUserResponse = await get('/own_user');
     await Future.delayed(const Duration(milliseconds: 200));
     _authService.setNotAuthenticated();
   }
 
   Future<Optional<String>> register(String username, String password) async {
-    final response = await post('/auth/register', body: <String, String>{
+    final response = await post('/auth/register', body: {
       'username': username,
       'password': password
     });
@@ -33,8 +33,21 @@ class RestApiClient {
       // Success.
       return Optional<String>.absent();
     }
-    // TODO: Actually send the error message lol.
+    // TODO: Actually send an error message.
     return Optional<String>.of("Unknown error occured.");
+  }
+
+  Future<LoginResponse> login(String username, String password) async {
+    await Future.delayed(const Duration(milliseconds: 200));
+//    final response = await post('/auth/login', body: {
+//      'username': username,
+//      'password': password
+//    });
+//    if (response.statusCode == 200) {
+//      return LoginResponse.successful(JsonDecoder().convert(response.body));
+//    }
+    // TODO: Actually send an error message.
+    return LoginResponse.unsuccessful("Unknown error occured");
   }
 
   Future<Response> get(url) async {

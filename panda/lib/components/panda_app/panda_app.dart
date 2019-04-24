@@ -34,13 +34,18 @@ class PandaAppComponent implements OnInit {
 
   @override
   void ngOnInit() async {
-    await _apiClient.getOwnUser();
+    await _apiClient.fetchOwnUser();
     attemptedInitialLoad = true;
   }
 
-  void onLoginCredentials(LoginCredentials credentials) {
-    print(credentials.username + " " + credentials.password);
-    loginError = "Invalid username or password.";
+  void onLoginCredentials(LoginCredentials credentials) async {
+    final loginResponse =
+        await _apiClient.login(credentials.username, credentials.password);
+    if (loginResponse.hasError) {
+      loginError = loginResponse.error;
+    } else {
+      authService.setAuthenticated(loginResponse);
+    }
   }
 
   void onRegisterCredentials(RegisterCredentials credentials) async {

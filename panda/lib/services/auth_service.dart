@@ -2,11 +2,25 @@ import 'dart:html' show window;
 
 import 'package:angular/angular.dart';
 
-class _User {
-  final int id;
+class LoginResponse {
+  final String error;
+
+  final String authToken;
+  final int userId;
   final String username;
 
-  _User(this.id, this.username);
+  LoginResponse.unsuccessful(this.error)
+      : authToken = null,
+        userId = null,
+        username = null;
+
+  LoginResponse.successful(Map<String, dynamic> response)
+      : error = null,
+        authToken = response['authToken'],
+        userId = response['userId'],
+        username = response['username'];
+
+  bool get hasError => error?.isNotEmpty;
 }
 
 @Injectable()
@@ -38,8 +52,15 @@ class AuthService {
     _ownUser = null;
   }
 
-  void setAuthenticated(String authToken, Map<String, dynamic> apiResponse) {
-    window.localStorage['auth-token'] = authToken;
-    _ownUser = _User(apiResponse['id'], apiResponse['username']);
+  void setAuthenticated(LoginResponse loginResponse) {
+    window.localStorage['auth-token'] = loginResponse.authToken;
+    _ownUser = _User(loginResponse.userId, loginResponse.username);
   }
+}
+
+class _User {
+  final int id;
+  final String username;
+
+  _User(this.id, this.username);
 }
