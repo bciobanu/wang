@@ -4,7 +4,7 @@ const router = express.Router()
 const UserController = require('../../controller/userController')
 const userController = new UserController()
 
-const verifyToken = require('../../controller/commons/verifyToken')
+const verifyToken = require('../../helpers/verifyToken')
 
 router.get('/', verifyToken, function (req, res) {
     userController.findById(req, res)

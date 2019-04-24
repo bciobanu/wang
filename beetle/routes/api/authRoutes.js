@@ -4,11 +4,14 @@ const router = express.Router()
 const AuthController = require('../../controller/authController')
 const authController = new AuthController()
 
-router.post('/register', function (req, res) {
+const ValidatorFactory = require('../../helpers/validatorFactory')
+const validatorFactory = new ValidatorFactory()
+
+router.post('/register', validatorFactory.userAuthValidator(), function (req, res) {
     authController.register(req, res)
 })
 
-router.post('/login', function (req, res) {
+router.post('/login', validatorFactory.userAuthValidator(), function (req, res) {
     authController.login(req, res)
 })
 

@@ -2,7 +2,7 @@ const UserDao = require('../dao/userDao')
 const ControllerCommon = require('./commons/controllerCommon')
 const User = require('../model/user')
 
-const SerializerFactory = require('./commons/serializerFactory')
+const SerializerFactory = require('../helpers/serializerFactory')
 const serializerFactory = new SerializerFactory()
 
 class UserController {
