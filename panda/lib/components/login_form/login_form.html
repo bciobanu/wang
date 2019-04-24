@@ -1,6 +1,5 @@
 <div class="form-container">
-    <div class="container">
-        <h1 style="text-align: center;">Login</h1>
+    <div class="container" style="height: 100%; position: relative;">
         <form (ngSubmit)="onSubmit()">
             <div class="form-group">
                 <label for="login-username">Username</label>
@@ -18,8 +17,8 @@
                        [(ngModel)]="password" ngControl="login-password">
             </div>
             <div class="row">
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary">Submit</button>
+                <div class="col-auto" style="position: absolute; bottom: 0; text-align: center; width: 100%">
+                    <button type="submit" class="btn btn-primary">Login</button>
                 </div>
             </div>
         </form>
