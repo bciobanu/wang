@@ -2,8 +2,9 @@
 
 #[macro_use] extern crate nom;
 
-pub mod ast;
-pub mod lex;
+mod ast;
+mod lex;
+mod interpret;
 
 #[cfg(test)]
 mod tests {

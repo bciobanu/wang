@@ -18,7 +18,7 @@ use crate::lex;
 
 #[derive(Debug, PartialEq)]
 pub(crate) struct P<T> {
-    p: Box<T>,
+    pub(crate) p: Box<T>,
 }
 
 impl<T> P<T> {
@@ -27,7 +27,7 @@ impl<T> P<T> {
     }
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub(crate) enum Ops {
     Add,
     Sub,
@@ -58,10 +58,17 @@ pub(crate) enum Stm {
 }
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct Stms(Vec<Stm>);
+pub(crate) struct Stms(pub(crate) Vec<Stm>);
 
 #[derive(Debug, PartialEq)]
-pub(crate) struct Args(Vec<Expr>);
+pub(crate) struct Args(pub(crate) Vec<Expr>);
+
+#[derive(Debug, PartialEq)]
+pub(crate) struct Function {
+    pub(crate) name: String,
+    pub(crate) args: Vec<String>,
+    pub(crate) instr: Stms,
+}
 
 // macro_rules! of_class {
 //     ($obj:expr, $tt:pat) => {
@@ -81,20 +88,10 @@ macro_rules! dec_then_type {
                 $t1 => Some(0),
                 _ => None,
             },
-            _ => panic!()
+            _ => None,
         }
     };
 }
-
-// macro_rules! direct_map {
-//     ($ty:pat, $)
-// }
-
-// macro_rules! dmap {
-//     ($obj:expr, $(tt)*, $(tt)*) => {
-        
-//     };
-// }
 
 fn to_ast_op(op: lex::OpType) -> Ops {
     match op {
@@ -173,7 +170,7 @@ named!(p_stm<&[u8], Stm>,
         p_block | // stm -> block
         terminated!(
             map!(p_expr, |exp| Stm::Single(exp)),
-            map_opt!(lex::p_braces, dec_then_type!(lex::SepType::SemiCol, lex::Token::Sep))
+            map_opt!(lex::p_sep, dec_then_type!(lex::SepType::SemiCol, lex::Token::Sep))
         ) // stm -> expr ;
     )
 );
@@ -186,9 +183,104 @@ named!(p_block<&[u8], Stm>,
     ) // block -> { stms }
 );
 
+named!(p_source<&[u8], Stms>, terminated!(p_stms, preceded!(lex::p_spaces, char!('#'))));
+
 #[cfg(test)]
 mod tests {
     #[test]
-    fn dummy() {
+    fn sample_expr() {
+        use super::*;
+        assert_eq!(
+            p_expr(&b"a = 100#"[..]),
+            Ok((
+                &b"#"[..],
+                Expr::Op(
+                    Ops::Asg,
+                    P::new(Atom::Ident("a".into())),
+                    P::new(Expr::Atm(
+                        P::new(Atom::Integer(100))
+                    ))
+                )
+            ))
+        );
+    }
+
+    #[test]
+    fn sample_program1() {
+        use super::*;
+        let prog = b"(a[\"ceva wtv\"]) = 100; #";
+        assert_eq!(
+            p_source(&prog[..]),
+            Ok(
+                (&b""[..],
+                Stms(
+                    vec![
+                        Stm::Single(
+                            Expr::Op(
+                                Ops::Asg,
+                                P::new(Atom::Exp(
+                                    P::new(Expr::Op(
+                                        Ops::Acc,
+                                        P::new(Atom::Ident("a".into())),
+                                        P::new(Expr::Atm(P::new(Atom::Str("ceva wtv".into()))))
+                                    ))
+                                )),
+                                P::new(Expr::Atm(P::new(Atom::Integer(100i64))))
+                            )
+                        )
+                    ]
+                ))
+            )
+        );
+    }
+
+    #[test]
+    fn sample_program2() {
+        use super::*;
+        let prog = br"
+        var = 1323 * b + anc[100];
+        {
+            b = 3;
+            c = 2;
+        }
+        #";
+        assert_eq!(
+            p_source(&prog[..]),
+            Ok(( &b""[..],
+                Stms(vec![
+                    Stm::Single(
+                        Expr::Op(
+                            Ops::Asg,
+                            P::new(Atom::Ident("var".into())),
+                            P::new(Expr::Op(
+                                Ops::Mul,
+                                P::new(Atom::Integer(1323)),
+                                P::new(Expr::Op(
+                                    Ops::Add,
+                                    P::new(Atom::Ident("b".into())),
+                                    P::new(Expr::Op(
+                                        Ops::Acc,
+                                        P::new(Atom::Ident("anc".into())),
+                                        P::new(Expr::Atm(P::new(Atom::Integer(100))))
+                                    ))
+                                ))
+                            ))
+                        )
+                    ),
+                    Stm::Block(Stms(vec![
+                        Stm::Single(Expr::Op(
+                            Ops::Asg,
+                            P::new(Atom::Ident("b".into())),
+                            P::new(Expr::Atm(P::new(Atom::Integer(3))))
+                        )),
+                        Stm::Single(Expr::Op(
+                            Ops::Asg,
+                            P::new(Atom::Ident("c".into())),
+                            P::new(Expr::Atm(P::new(Atom::Integer(2))))
+                        )),
+                    ]))
+                ])
+            ))
+        );
     }
 }
