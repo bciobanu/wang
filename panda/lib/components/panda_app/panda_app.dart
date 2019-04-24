@@ -1,5 +1,5 @@
-import 'package:angular/angular.dart' show Component, OnInit, NgIf;
-import 'package:quiver/core.dart' show Optional;
+import 'package:angular/angular.dart' show Component, OnInit, coreDirectives;
+import 'package:panda/common/credentials.dart';
 import 'package:angular_components/material_spinner/material_spinner.dart';
 import 'package:panda/components/login_form/login_form.dart';
 import 'package:panda/components/register_form/register_form.dart';
@@ -13,11 +13,11 @@ import 'package:panda/services/rest_api_client.dart';
     MaterialSpinnerComponent,
     LoginFormComponent,
     RegisterFormComponent,
-    NgIf
+    coreDirectives,
   ],
   styleUrls: [
     'panda_app.css',
-    'package:angular_components/app_layout/layout.scss.css'
+    'package:angular_components/app_layout/layout.scss.css',
   ],
 )
 class PandaAppComponent implements OnInit {
@@ -38,22 +38,19 @@ class PandaAppComponent implements OnInit {
     attemptedInitialLoad = true;
   }
 
-  void onLoginCredentials(LoginCredentials credentials) async {
-    final loginResponse =
-        await _apiClient.login(credentials.username, credentials.password);
-    if (loginResponse.hasError) {
-      loginError = loginResponse.error;
+  void onLoginCredentials(Credentials credentials) async {
+    final loginResult = await _apiClient.login(credentials);
+    if (loginResult.hasError) {
+      loginError = loginResult.error;
     } else {
-      authService.setAuthenticated(
-          authToken: loginResponse.authToken, username: loginResponse.username);
+      authService.setAuthenticated(loginResult.value);
     }
   }
 
-  void onRegisterCredentials(RegisterCredentials credentials) async {
-    Optional<String> err =
-        await _apiClient.register(credentials.username, credentials.password);
-    if (err.isPresent) {
-      registrationError = err.value;
+  void onRegisterCredentials(Credentials credentials) async {
+    final registerResult = await _apiClient.register(credentials);
+    if (registerResult.hasError) {
+      registrationError = registerResult.error;
     } else {
       registrationSuccessful = true;
     }
