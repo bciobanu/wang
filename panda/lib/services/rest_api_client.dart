@@ -1,7 +1,8 @@
 import 'dart:convert';
 
 import 'package:angular/angular.dart' show Inject, Injectable, OpaqueToken;
-import 'package:quiver/core.dart' show Optional;
+import 'package:panda/common/credentials.dart';
+import 'package:panda/common/error_or.dart';
 import 'package:http/browser_client.dart';
 import 'package:http/http.dart';
 
@@ -24,44 +25,52 @@ class RestApiClient {
     }
     final response = await get('/user');
     if (response.statusCode == 200) {
-      _authService.setAuthenticated(
-          authToken: _authService.authToken,
-          username: JsonDecoder().convert(response.body)['username']);
+      _authService.setAuthenticated(AuthData(
+        authToken: _authService.authToken,
+        username: JsonDecoder().convert(response.body)['username'],
+      ));
     } else {
       _authService.setNotAuthenticated();
     }
   }
 
-  Future<Optional<String>> register(String username, String password) async {
+  Future<ErrorOr<void>> register(Credentials credentials) async {
     Response response;
     try {
-      response = await post('/auth/register',
-          body: {'username': username, 'password': password});
+      response = await post('/auth/register', body: {
+        'username': credentials.username,
+        'password': credentials.password
+      });
     } catch (error) {
-      return Optional<String>.of("Network error.");
+      return ErrorOr.unsuccessful("Network error.");
     }
     if (response.statusCode == 200) {
-      _authService.setAuthenticated(
-          authToken: JsonDecoder().convert(response.body)['authToken'],
-          username: username);
-      return Optional<String>.absent();
+      _authService.setAuthenticated(AuthData(
+        authToken: JsonDecoder().convert(response.body)['authToken'],
+        username: credentials.username,
+      ));
+      return ErrorOr.successful(true);
     }
-    return Optional<String>.of(JsonDecoder().convert(response.body)['message']);
+    return ErrorOr.unsuccessful(
+        JsonDecoder().convert(response.body)['message']);
   }
 
-  Future<LoginResponse> login(String username, String password) async {
+  Future<ErrorOr<AuthData>> login(Credentials credentials) async {
     Response response;
     try {
-      response = await post('/auth/login',
-          body: {'username': username, 'password': password});
+      response = await post('/auth/login', body: {
+        'username': credentials.username,
+        'password': credentials.password
+      });
     } catch (error) {
-      return LoginResponse.unsuccessful("Network error.");
+      return ErrorOr<AuthData>.unsuccessful("Network error.");
     }
     if (response.statusCode == 200) {
-      return LoginResponse.successful(
-          JsonDecoder().convert(response.body)['token'], username);
+      return ErrorOr<AuthData>.successful(AuthData(
+          authToken: JsonDecoder().convert(response.body)['token'],
+          username: credentials.username));
     }
-    return LoginResponse.unsuccessful(
+    return ErrorOr<AuthData>.unsuccessful(
         JsonDecoder().convert(response.body)['message']);
   }
 
@@ -133,19 +142,4 @@ class RestApiClient {
     }
     return enhancedHeaders;
   }
-}
-
-class LoginResponse {
-  final String error;
-
-  final String authToken;
-  final String username;
-
-  LoginResponse.unsuccessful(this.error)
-      : authToken = null,
-        username = null;
-
-  LoginResponse.successful(this.authToken, this.username) : error = null;
-
-  bool get hasError => error != null;
 }

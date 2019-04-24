@@ -3,6 +3,13 @@ import 'dart:html' show window;
 import 'package:angular/angular.dart';
 import 'package:meta/meta.dart';
 
+class AuthData {
+  final String authToken;
+  final String username;
+
+  AuthData({@required this.authToken, @required this.username});
+}
+
 @Injectable()
 class AuthService {
   String _ownUsername = null;
@@ -20,9 +27,8 @@ class AuthService {
     _ownUsername = null;
   }
 
-  void setAuthenticated(
-      {@required String authToken, @required String username}) {
-    window.localStorage['auth-token'] = authToken;
-    _ownUsername = username;
+  void setAuthenticated(AuthData authData) {
+    window.localStorage['auth-token'] = authData.authToken;
+    _ownUsername = authData.username;
   }
 }

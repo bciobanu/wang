@@ -2,13 +2,7 @@ import 'dart:async';
 
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
-
-class RegisterCredentials {
-  final String username;
-  final String password;
-
-  RegisterCredentials(this.username, this.password);
-}
+import 'package:panda/common/credentials.dart';
 
 @Component(
   selector: 'register-form',
@@ -17,7 +11,7 @@ class RegisterCredentials {
   directives: [coreDirectives, formDirectives],
 )
 class RegisterFormComponent {
-  final _registerSubmitController = StreamController<RegisterCredentials>();
+  final _registerStreamer = StreamController<Credentials>();
 
   @Input()
   String registrationError = "";
@@ -40,10 +34,9 @@ class RegisterFormComponent {
       password == retypedPassword || retypedPassword.isEmpty;
 
   @Output()
-  Stream<RegisterCredentials> get registerSubmit =>
-      _registerSubmitController.stream;
+  Stream<Credentials> get registerSubmit => _registerStreamer.stream;
 
   void onSubmit() {
-    _registerSubmitController.add(RegisterCredentials(username, password));
+    _registerStreamer.add(Credentials(username: username, password: password));
   }
 }

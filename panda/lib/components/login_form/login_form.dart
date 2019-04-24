@@ -2,13 +2,7 @@ import 'dart:async';
 
 import 'package:angular/angular.dart';
 import 'package:angular_forms/angular_forms.dart';
-
-class LoginCredentials {
-  final String username;
-  final String password;
-
-  LoginCredentials(this.username, this.password);
-}
+import 'package:panda/common/credentials.dart';
 
 @Component(
   selector: 'login-form',
@@ -17,7 +11,7 @@ class LoginCredentials {
   directives: [coreDirectives, formDirectives],
 )
 class LoginFormComponent {
-  final _loginSubmitController = StreamController<LoginCredentials>();
+  final _loginStreamer = StreamController<Credentials>();
 
   @Input()
   String loginError = "";
@@ -31,9 +25,9 @@ class LoginFormComponent {
   bool get hasLoginError => loginError?.isNotEmpty;
 
   @Output()
-  Stream<LoginCredentials> get loginSubmit => _loginSubmitController.stream;
+  Stream<Credentials> get loginSubmit => _loginStreamer.stream;
 
   void onSubmit() {
-    _loginSubmitController.add(LoginCredentials(username, password));
+    _loginStreamer.add(Credentials(username: username, password: password));
   }
 }
