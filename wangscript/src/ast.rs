@@ -183,7 +183,7 @@ named!(p_block<&[u8], Stm>,
     ) // block -> { stms }
 );
 
-named!(p_source<&[u8], Stms>, terminated!(p_stms, preceded!(lex::p_spaces, char!('#'))));
+named!(pub(crate) p_source<&[u8], Stms>, terminated!(p_stms, preceded!(lex::p_spaces, char!('#'))));
 
 #[cfg(test)]
 mod tests {
