@@ -4,7 +4,7 @@ class ControllerCommon {
     findSuccess(res, serializer) {
         return (result) => {
             res.status(200)
-            res.json(serializer(result))
+            res.json(serializer ? serializer(result) : result)
         }
     }
 

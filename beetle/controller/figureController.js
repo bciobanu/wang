@@ -10,20 +10,26 @@ class FigureController {
 
     findById(req, res) {
         let id = req.params.id
+        let userId = req.userId
         this.figureDao.findById(id)
-            .then(this.common.findSuccess(res))
+            .then(figure => {
+                if (figure.userId !== userId)
+                    this.common.unauthorizedError(res)()
+                else
+                    this.common.findSuccess(res)(figure)
+            })
             .catch(this.common.findError(res))
     }
 
     findAll(req, res) {
-        let userId = req.params.user_id
+        let userId = req.userId
         this.figureDao.findAll(userId)
             .then(this.common.findSuccess(res))
             .catch(this.common.findError(res))
     }
 
     update(req, res) {
-        let figure = new Figure(req.params.id, req.body.code, req.body.user_id)
+        let figure = new Figure(req.params.id, req.body.code, req.userId)
         return this.figureDao.update(figure)
             .then(this.common.editSuccess(res))
             .catch(this.common.serverError(res))
@@ -32,7 +38,7 @@ class FigureController {
     create(req, res) {
         let figure = new Figure()
         figure.code = req.body.code
-        figure.userId = req.body.user_id
+        figure.userId = req.userId
         return this.figureDao.create(figure)
             .then(this.common.editSuccess(res))
             .catch(this.common.serverError(res))
@@ -40,7 +46,7 @@ class FigureController {
 
     delete(req, res) {
         let id = req.params.id
-        return this.figureDao.deleteById(id)
+        return this.figureDao.deleteById(id, req.userId)
             .then(this.common.findSuccess(res))
             .catch(this.common.findError(res))
     }

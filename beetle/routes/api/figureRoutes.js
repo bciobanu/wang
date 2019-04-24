@@ -4,23 +4,25 @@ const router = express.Router()
 const FigureController = require('../../controller/figureController')
 const figureController = new FigureController()
 
-router.get('/:id', function (req, res) {
-    figureController.findById(req, res)
-})
+const verifyToken = require('../../controller/commons/verifyToken')
 
-router.get('/from/:user_id', function (req, res) {
+router.get('/', verifyToken, function (req, res) {
     figureController.findAll(req, res)
 })
 
-router.put('/:id', function (req, res) {
+router.get('/:id', verifyToken, function (req, res) {
+    figureController.findById(req, res)
+})
+
+router.put('/:id', verifyToken, function (req, res) {
     figureController.update(req, res)
 })
 
-router.post('/', function (req, res) {
+router.post('/', verifyToken, function (req, res) {
     figureController.create(req, res)
 })
 
-router.delete('/:id', function (req, res) {
+router.delete('/:id', verifyToken, function (req, res) {
     figureController.delete(req, res)
 })
 
