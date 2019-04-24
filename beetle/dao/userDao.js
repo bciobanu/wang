@@ -14,6 +14,14 @@ class UserDao {
             new User(row.id, row.username, row.hashed_password))
     }
 
+    findByUsername(username) {
+        let sqlRequest = "SELECT id, username, hashed_password FROM user WHERE username=$username"
+        let sqlParams = {$username: username}
+
+        return this.common.findOne(sqlRequest, sqlParams).then(row => 
+            new User(row.id, row.username, row.hashed_password))
+    }
+
     findAll() {
         let sqlRequest = "SELECT * FROM user"
         return this.common.findAll(sqlRequest, {}).then(rows => {

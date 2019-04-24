@@ -1,3 +1,5 @@
+const DaoError = require('../../dao/commons/daoError')
+
 class ControllerCommon {
     findSuccess(res) {
         return (result) => {
@@ -24,6 +26,13 @@ class ControllerCommon {
         return (error) => {
             res.status(404)
             res.json(error)
+        }
+    }
+
+    alreadyExistsError(res) {
+        return (result) => {
+            res.status(409)
+            res.json(new DaoError(409, "Entity already exists"))
         }
     }
 }

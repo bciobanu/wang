@@ -42,7 +42,7 @@ class DaoCommon {
             let statement = DB.db.prepare(sqlRequest)
             statement.run(sqlParams, function (err) {
                 if (this.changes === 1) {
-                    resolve(true)
+                    resolve(this.lastID)
                 } else if (this.changes === 0) {
                     reject(
                         new DaoError(404, "Entity not found")
