@@ -36,7 +36,8 @@ class RegisterFormComponent {
 
   bool get hasRegistrationError => registrationError?.isNotEmpty;
 
-  bool get passwordsMatch => password == retypedPassword;
+  bool get passwordsMatch =>
+      password == retypedPassword || retypedPassword.isEmpty;
 
   @Output()
   Stream<RegisterCredentials> get registerSubmit =>

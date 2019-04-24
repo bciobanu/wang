@@ -25,29 +25,36 @@ class RestApiClient {
   }
 
   Future<Optional<String>> register(String username, String password) async {
-    final response = await post('/auth/register',
-        body: {'username': username, 'password': password});
+    Response response;
+    try {
+      response = await post('/auth/register',
+          body: {'username': username, 'password': password});
+    } catch (error) {
+      return Optional<String>.of("Network error.");
+    }
     if (response.statusCode == 200) {
       _authService.setAuthenticated(
           authToken: JsonDecoder().convert(response.body)['authToken'],
           username: username);
       return Optional<String>.absent();
     }
-    // TODO: Actually send an error message.
-    return Optional<String>.of("Unknown error occured.");
+    return Optional<String>.of(JsonDecoder().convert(response.body)['message']);
   }
 
   Future<LoginResponse> login(String username, String password) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-//    final response = await post('/auth/login', body: {
-//      'username': username,
-//      'password': password
-//    });
-//    if (response.statusCode == 200) {
-//      return LoginResponse.successful(JsonDecoder().convert(response.body));
-//    }
-    // TODO: Actually send an error message.
-    return LoginResponse.unsuccessful("Unknown error occured");
+    Response response;
+    try {
+      response = await post('/auth/login',
+          body: {'username': username, 'password': password});
+    } catch (error) {
+      return LoginResponse.unsuccessful("Network error.");
+    }
+    if (response.statusCode == 200) {
+      return LoginResponse.successful(
+          JsonDecoder().convert(response.body)['token'], username);
+    }
+    return LoginResponse.unsuccessful(
+        JsonDecoder().convert(response.body)['message']);
   }
 
   Future<Response> get(url) async {
@@ -132,5 +139,5 @@ class LoginResponse {
 
   LoginResponse.successful(this.authToken, this.username) : error = null;
 
-  bool get hasError => error?.isNotEmpty;
+  bool get hasError => error != null;
 }
