@@ -3,6 +3,7 @@ use crate::ast::{P, Stm, Stms, Atom, Ops, Expr, Args, Function};
 use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
+use std::io::{Read, Write};
 use std::dbg;
 
 pub struct Interpreter {
@@ -145,6 +146,47 @@ impl Interpreter {
         }
         Ok(Val::Ptr(none_obj()))
     }
+    
+    fn generate_code<W: Write>(&self, stream: &mut W) -> Result<(), ()> {
+        stream.write_all(b"\\tikz ").map_err(|_| ())?;
+        match *self.table.env.borrow() {
+            Value::Obj(ref map) => {
+                let obj = map.get("root").ok_or(())?;
+                self.gen_for_node(stream, obj)
+            },
+            _ => Err(()),
+        }
+    }
+
+    fn gen_for_node<W: Write>(&self, stream: &mut W, obj: &Obj) -> Result<(), ()> {
+        stream.write_all(b"\\node {").map_err(|_| ())?;
+        match *obj.borrow() {
+            Value::Obj(ref map) => {
+                map.get("title").ok_or(()).and_then(
+                    |inner| match *inner.borrow() {
+                        Value::String(ref s) => stream.write_all(s.as_bytes()).map_err(|_| ()),
+                        _ => Err(()),
+                    }
+                )?;
+                stream.write_all(b"} ").map_err(|_| ())?;
+                map.get("__sons__").ok_or(()).and_then(
+                    |inner| match *inner.borrow() {
+                        Value::List(ref sons) => {
+                            for son in sons {
+                                stream.write_all(b"child {").map_err(|_| ())?;
+                                self.gen_for_node(stream, son)?;
+                                stream.write_all(b"} ").map_err(|_| ())?;
+                            }
+                            Ok(())
+                        },
+                        _ => Err(())
+                    }
+                )?;
+            },
+            _ => return Err(()),
+        }
+        Ok(())
+    }
 }
 
 #[derive(Debug, PartialEq)]
@@ -244,11 +286,22 @@ fn is_node(obj: &Obj) -> bool {
     }
 }
 
+fn translate<R: Read, W: Write>(source: &mut R, compiled: &mut W) -> Result<(), ()> {
+    let byte_array: Vec<u8> = source.bytes().fold(Ok(Vec::new()),
+        |mut acc, x| { acc = acc.and_then(|mut vec| { vec.push(x.map_err(|_| ())?); Ok(vec) }); acc }
+    )?;
+    let source_code = crate::ast::p_source(&byte_array).map_err(|_| ())?.1;
+    let mut interpreter = Interpreter::new();
+    interpreter.run_stms(&source_code)?;
+    interpreter.generate_code(compiled)
+}
+
+
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn interpret_simple_program() {
-        use super::*;
+    use super::*;
+
+    fn simple_program() -> (Interpreter, Obj) {
         let program = Stms(vec![
             Stm::Single(Expr::Op(
                 Ops::Asg,
@@ -264,15 +317,42 @@ mod tests {
                         Expr::Atm( P::new(Atom::Ident("a".into())) )
                     ]),
                 )),
+            )),
+            Stm::Single(Expr::Op(
+                Ops::Asg,
+                P::new(Atom::Ident("root".into())),
+                P::new(Expr::Call(
+                    P::new(Atom::Ident("node".into())),
+                    Args(vec![
+                        Expr::Atm( P::new(Atom::Ident("a".into())) )
+                    ]),
+                )),
+            )),
+            Stm::Single(Expr::Call(
+                P::new(Atom::Ident("edge".into())),
+                Args(vec![
+                    Expr::Atm( P::new(Atom::Ident("root".into())) ),
+                    Expr::Atm( P::new(Atom::Ident("b".into())) ),
+                ])
             ))
         ]);
         let mut pred_env = HashMap::new();
         pred_env.insert("a".into(), new_obj(Value::String("Abc".into())));
-        let mut b_map = HashMap::new();
-        b_map.insert("__class__".into(), new_obj(Value::String("__builtin_node__".into())));
-        b_map.insert("__sons__".into(), new_obj(Value::List(Vec::new())));
-        b_map.insert("title".into(), new_obj(Value::String("Abc".into())));
-        pred_env.insert("b".into(), new_obj(Value::Obj(b_map)));
+        let b_obj = { // Insert b
+            let mut b_map = HashMap::new();
+            b_map.insert("__class__".into(), new_obj(Value::String("__builtin_node__".into())));
+            b_map.insert("__sons__".into(), new_obj(Value::List(Vec::new())));
+            b_map.insert("title".into(), new_obj(Value::String("Abc".into())));
+            pred_env.insert("b".into(), new_obj(Value::Obj(b_map.clone())));
+            new_obj(Value::Obj(b_map))
+        };
+        { // Insert c
+            let mut b_map = HashMap::new();
+            b_map.insert("__class__".into(), new_obj(Value::String("__builtin_node__".into())));
+            b_map.insert("__sons__".into(), new_obj(Value::List(vec![b_obj.clone()])));
+            b_map.insert("title".into(), new_obj(Value::String("Abc".into())));
+            pred_env.insert("root".into(), new_obj(Value::Obj(b_map.clone())));
+        }
         let pred_env = new_obj(Value::Obj(pred_env));
         let mut interpreter = Interpreter::new();
         assert_eq!(interpreter.run_stms(&program), Ok(()));
@@ -280,6 +360,17 @@ mod tests {
             map.remove("node");
             map.remove("edge");
         }
+        (interpreter, pred_env)
+    }
+    #[test]
+    fn interpret_simple_program() {
+        let (interpreter, pred_env) = simple_program();
         assert_eq!(interpreter.table.env, pred_env);
+    }
+
+    #[test]
+    fn generate_simple_program() {
+        let (interpreter, _) = simple_program();
+        assert_eq!(interpreter.generate_code(&mut std::io::stdout()), Ok(()));
     }
 }
