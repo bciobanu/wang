@@ -1,4 +1,4 @@
-import 'package:panda/services/rest_api_client.dart';
+import 'package:panda/rest_api_client/rest_api_client.dart';
 
 import 'tikz_compilation_result.dart';
 

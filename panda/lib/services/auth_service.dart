@@ -2,6 +2,8 @@ import 'dart:html' show window;
 
 import 'package:angular/angular.dart';
 import 'package:meta/meta.dart';
+import 'package:panda/rest_api_client/middleware.dart';
+import 'package:panda/rest_api_client/rest_api_response.dart';
 
 class AuthData {
   final String authToken;
@@ -30,5 +32,30 @@ class AuthService {
   void setAuthenticated(AuthData authData) {
     window.localStorage['auth-token'] = authData.authToken;
     _ownUsername = authData.username;
+  }
+
+  Middleware getMiddleware() {
+    return _AuthMiddleware(this);
+  }
+}
+
+class _AuthMiddleware implements Middleware {
+  final AuthService _authService;
+
+  _AuthMiddleware(this._authService);
+
+  @override
+  void onRequest(Map<String, String> headers, [Map<String, dynamic> body]) {
+    if (_authService.hasAuthToken) {
+      headers['x-access-token'] = _authService.authToken;
+    }
+  }
+
+  @override
+  bool onResponse(RestApiResponseBuilder builder) {
+    if (builder.statusCode == 401) {
+      _authService.setNotAuthenticated();
+    }
+    return true;
   }
 }

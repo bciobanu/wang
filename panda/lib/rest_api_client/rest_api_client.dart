@@ -1,36 +1,26 @@
-import 'dart:convert';
-
-import 'package:angular/angular.dart' show Inject, Injectable, OpaqueToken;
+import 'package:angular/angular.dart' show Injectable;
 import 'package:http/http.dart' as http;
 
 import 'package:panda/common/credentials.dart';
 import 'package:panda/common/error_or.dart';
 import 'package:panda/common/tikz_compilation_result.dart';
-import 'auth_service.dart';
+import 'package:panda/services/auth_service.dart';
+import 'middleware.dart';
+import 'rest_api_response.dart';
 
-const apiAddress = OpaqueToken<String>('apiAddress');
-
-class RestApiResponse {
-  final int statusCode;
-  final dynamic body;
-
-  RestApiResponse(http.Response response)
-      : statusCode = response.statusCode,
-        body = JsonDecoder().convert(response.body);
-
-  RestApiResponse.networkError()
-      : statusCode = -1,
-        body = {'message': 'Network error.'};
-}
+typedef _Fetch = Future<http.Response> Function(
+    String url, Map<String, String> headers, Map<String, dynamic> body);
 
 @Injectable()
 class RestApiClient {
   final http.Client _client;
-  final String _apiAddress;
   final AuthService _authService;
 
+  final String _apiAddress;
+  final List<Middleware> _middlewares;
+
   RestApiClient(
-      this._client, @Inject(apiAddress) this._apiAddress, this._authService);
+      this._client, this._apiAddress, this._authService, this._middlewares);
 
   Future<void> fetchOwnUser() async {
     if (!_authService.hasAuthToken) {
@@ -91,53 +81,53 @@ class RestApiClient {
   }
 
   Future<RestApiResponse> get(String url) async {
-    http.Response response;
-    try {
-      response = await _client.get(_apiAddress + url, headers: _headers);
-    } catch (error) {
-      print(error);
-      return RestApiResponse.networkError();
-    }
-    if (response.statusCode == 401) {
-      _authService.setNotAuthenticated();
-    }
-    return RestApiResponse(response);
+    return await _fetch(
+      (url, headers, body) async => await _client.get(url, headers: headers),
+      url,
+      null,
+    );
   }
 
   Future<RestApiResponse> post(String url, Map<String, String> body) async {
-    http.Response response;
-    try {
-      response =
-          await _client.post(_apiAddress + url, headers: _headers, body: body);
-    } catch (error) {
-      print(error);
-      return RestApiResponse.networkError();
-    }
-    if (response.statusCode == 401) {
-      _authService.setNotAuthenticated();
-    }
-    return RestApiResponse(response);
+    return await _fetch(
+      (url, headers, body) async =>
+          await _client.post(url, headers: headers, body: body),
+      url,
+      body,
+    );
   }
 
   Future<RestApiResponse> put(String url, Map<String, String> body) async {
-    http.Response response;
-    try {
-      response =
-          await _client.put(_apiAddress + url, headers: _headers, body: body);
-    } catch (error) {
-      return RestApiResponse.networkError();
-    }
-    if (response.statusCode == 401) {
-      _authService.setNotAuthenticated();
-    }
-    return RestApiResponse(response);
+    return await _fetch(
+          (url, headers, body) async =>
+      await _client.put(url, headers: headers, body: body),
+      url,
+      body,
+    );
   }
 
-  Map<String, String> get _headers {
+  Future<RestApiResponse> _fetch(
+      _Fetch rawFetch, String url, Map<String, dynamic> body) async {
     final headers = Map<String, String>();
-    if (_authService.hasAuthToken) {
-      headers['x-access-token'] = _authService.authToken;
+
+    for (final middleware in _middlewares) {
+      middleware.onRequest(headers, body);
     }
-    return headers;
+
+    RestApiResponseBuilder builder;
+    try {
+      final response = await rawFetch(_apiAddress + url, headers, body);
+      builder = RestApiResponseBuilder(response);
+    } catch (error) {
+      builder = RestApiResponseBuilder.networkError();
+    }
+
+    for (final middleware in _middlewares) {
+      if (!middleware.onResponse(builder)) {
+        break;
+      }
+    }
+
+    return builder.toResponse();
   }
 }

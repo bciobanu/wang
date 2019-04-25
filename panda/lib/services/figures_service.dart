@@ -3,7 +3,7 @@ import 'dart:math' show max;
 import 'package:angular/angular.dart';
 
 import 'package:panda/common/figure.dart';
-import 'package:panda/services/rest_api_client.dart';
+import 'package:panda/rest_api_client/rest_api_client.dart';
 
 @Injectable()
 class FiguresService {
