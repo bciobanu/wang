@@ -3,8 +3,6 @@ import 'package:angular_components/material_button/material_button.dart';
 import 'package:angular_components/material_button/material_fab.dart';
 import 'package:angular_components/material_icon/material_icon.dart';
 import 'package:angular_components/material_spinner/material_spinner.dart';
-import 'package:panda/common/tikz_compilation_result.dart';
-import 'package:panda/services/compile_service.dart';
 import 'package:panda/services/figures_service.dart';
 
 @Component(
@@ -19,97 +17,59 @@ import 'package:panda/services/figures_service.dart';
     MaterialIconComponent,
   ],
 )
-class FigureEditorComponent implements OnChanges {
+class FigureEditorComponent implements OnInit {
   final FiguresService _figuresService;
-  final CompileService _compileService;
 
   @Input()
-  int figureId = null;
+  int figureId;
 
   bool isFigureLoaded = false;
 
   bool committingFigureNameEdit = false;
   bool editingFigureName = false;
-  int figureIdDirtyName = null;
-  String figureNameDirty = null;
 
   bool committingFigureCode = false;
   bool compilingFigure = false;
 
-  /// A Map from figureId to the code that should be displayed in the editor for
-  /// that figure.
-  final _dirtyCode = Map<int, String>();
-
-  // A Map from figureId to the result of the last Tikz compilation.
-  final _compiledTikz = Map<int, TikzCompilationResult>();
-
-  FigureEditorComponent(this._figuresService, this._compileService);
-
-  bool get hasHighlightedFigure => figureId != null;
+  FigureEditorComponent(this._figuresService);
 
   Figure get figure => _figuresService.getFigure(figureId);
 
-  bool get isCurrentFigureDirty => isDirty(figureId);
+  void setEditingFigureName() => editingFigureName = true;
 
-  String get currentFigureDirtyCode => _dirtyCode[figureId];
-
-  bool get isCurrentFigureCompiled => _compiledTikz.containsKey(figureId);
-
-  TikzCompilationResult get currentFigureCompilationResult =>
-      _compiledTikz[figureId];
-
-  bool isDirty(int figureId) =>
-      _dirtyCode.containsKey(figureId) &&
-      _figuresService.getFigure(figureId).code != _dirtyCode[figureId];
-
-  void setEditingFigureName() {
-    figureNameDirty = figure.name;
-    editingFigureName = true;
-    figureIdDirtyName = figureId;
-  }
-
-  void cancelEditingFigureName() {
-    editingFigureName = false;
-    figureNameDirty = null;
-    figureIdDirtyName = null;
-  }
+  void cancelEditingFigureName() => editingFigureName = false;
 
   void commitFigureName() async {
     committingFigureNameEdit = true;
-    await _figuresService.updateFigureName(figureIdDirtyName, figureNameDirty);
+    await _figuresService.commitFigureName(figureId);
     committingFigureNameEdit = false;
     cancelEditingFigureName();
   }
 
   void commitFigureCode() async {
     committingFigureCode = true;
-    await _figuresService.updateFigureCode(figureId, currentFigureDirtyCode);
+    await _figuresService.commitFigureCode(figureId);
     committingFigureCode = false;
   }
 
   void compileFigure() async {
     compilingFigure = true;
-    int compilingFigureId = figureId;
-    final compileResult = await _compileService.compile(currentFigureDirtyCode);
-    _compiledTikz[compilingFigureId] = compileResult;
+    await _figuresService.compileFigure(figureId);
     compilingFigure = false;
   }
 
-  void setCurrentFigureDirtyCode(String dirtyCode) {
-    _dirtyCode[figureId] = dirtyCode;
-  }
+  void setFigureDirtyCode(String dirtyCode) =>
+      _figuresService.setFigureDirtyCode(figureId, dirtyCode);
+
+  void setFigureDirtyName(String dirtyName) =>
+      _figuresService.setFigureDirtyName(figureId, dirtyName);
 
   @override
-  void ngOnChanges(Map<String, SimpleChange> changes) async {
-    if (editingFigureName && figureIdDirtyName != figureId) {
-      cancelEditingFigureName();
-    }
+  void ngOnInit() async {
+    cancelEditingFigureName();
     isFigureLoaded = false;
-    if (hasHighlightedFigure && !_figuresService.isFigureLoaded(figureId)) {
-      int loadingFigureId = figureId;
-      await _figuresService.loadFigureCode(loadingFigureId);
-      _dirtyCode[loadingFigureId] =
-          _figuresService.getFigure(loadingFigureId).code;
+    if (!_figuresService.isFigureLoaded(figureId)) {
+      await _figuresService.loadFigureCode(figureId);
     }
     isFigureLoaded = true;
   }

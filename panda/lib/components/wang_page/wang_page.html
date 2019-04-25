@@ -18,7 +18,10 @@
             </div>
         </div>
         <div style="flex: 3">
-            <figure-editor [figureId]="highlightedFigureId"></figure-editor>
+            <div class="centered" *ngIf="highlightedFigureId == null">
+                <em>No figure selected. Select a figure from the list to view & edit its code here.</em>
+            </div>
+            <figure-editor *ngIf="highlightedFigureId != null" [figureId]="highlightedFigureId"></figure-editor>
         </div>
     </div>
 </div>

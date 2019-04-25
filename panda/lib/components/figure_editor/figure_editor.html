@@ -1,10 +1,7 @@
-<div class="centered" *ngIf="!hasHighlightedFigure">
-    <em>No figure selected. Select a figure from the list to view & edit its code here.</em>
-</div>
-<div class="centered" *ngIf="hasHighlightedFigure && !isFigureLoaded">
+<div class="centered" *ngIf="!isFigureLoaded">
     <material-spinner></material-spinner>
 </div>
-<div class="editor-container" *ngIf="hasHighlightedFigure && isFigureLoaded">
+<div class="editor-container" *ngIf="isFigureLoaded">
     <h2>
         <template [ngIf]="!editingFigureName">
             {{figure.name}}
@@ -13,7 +10,7 @@
             </material-fab>
         </template>
         <template [ngIf]="editingFigureName">
-            <input type="text" #nameInput [value]="figureNameDirty" (input)="figureNameDirty = nameInput.value"
+            <input type="text" #nameInput [value]="figure.dirtyName" (input)="setFigureDirtyName(nameInput.value)"
                    (keyup.enter)="commitFigureName()"/>
             <material-fab *ngIf="!committingFigureNameEdit" style="margin-left: 10px;" mini
                           (trigger)="commitFigureName()">
@@ -35,7 +32,7 @@
             Compile
         </material-button>
         <material-button style="float: right; position: relative"
-                         [disabled]="!isCurrentFigureDirty || committingFigureCode"
+                         [disabled]="!figure.hasDirtyCode || committingFigureCode"
                          (trigger)="commitFigureCode()">
             <div class="white-button-overlay" [style.opacity]="committingFigureCode ? '0.4' : '0'">
                 <material-spinner *ngIf="committingFigureCode" style="margin: 0 auto;"></material-spinner>
@@ -45,17 +42,16 @@
         </material-button>
     </h2>
     <textarea #codeEditor style="font-family: monospace; resize: none; height: 320px;"
-              (input)="setCurrentFigureDirtyCode(codeEditor.value)">
-        {{currentFigureDirtyCode}}
+              (input)="setFigureDirtyCode(codeEditor.value)" [value]="figure.dirtyCode">
     </textarea>
-    <div *ngIf="isCurrentFigureCompiled" style="flex: 1; margin-top: 20px;">
-        <h3 *ngIf="currentFigureCompilationResult.isSuccessful">Tikz code:</h3>
-        <h3 *ngIf="!currentFigureCompilationResult.isSuccessful">Tikz compiled with errors:</h3>
+    <div *ngIf="figure.hasCompilationResult" style="flex: 1; margin-top: 20px;">
+        <h3 *ngIf="figure.compilationResult.isSuccessful">Tikz code:</h3>
+        <h3 *ngIf="!figure.compilationResult.isSuccessful">Tikz compiled with errors:</h3>
         <div class="compilation-result-container">
-            <div *ngFor="let error of currentFigureCompilationResult.errors">
+            <div *ngFor="let error of figure.compilationResult.errors">
                 <span style="color: red;">Error</span> (code={{error.code}}): {{error.description}}
             </div>
-            <pre *ngIf="currentFigureCompilationResult.isSuccessful">{{currentFigureCompilationResult.tikzCode}}</pre>
+            <pre *ngIf="figure.compilationResult.isSuccessful">{{figure.compilationResult.tikzCode}}</pre>
         </div>
     </div>
 </div>

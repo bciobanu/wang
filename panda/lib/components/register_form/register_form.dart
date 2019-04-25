@@ -36,7 +36,6 @@ class RegisterFormComponent {
   @Output()
   Stream<Credentials> get registerSubmit => _registerStreamer.stream;
 
-  void onSubmit() {
-    _registerStreamer.add(Credentials(username: username, password: password));
-  }
+  void onSubmit() => _registerStreamer
+      .add(Credentials(username: username, password: password));
 }
