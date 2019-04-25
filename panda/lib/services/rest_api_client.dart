@@ -45,10 +45,6 @@ class RestApiClient {
       return ErrorOr.unsuccessful("Network error.");
     }
     if (response.statusCode == 200) {
-      _authService.setAuthenticated(AuthData(
-        authToken: JsonDecoder().convert(response.body)['authToken'],
-        username: credentials.username,
-      ));
       return ErrorOr.successful(true);
     }
     return ErrorOr.unsuccessful(
