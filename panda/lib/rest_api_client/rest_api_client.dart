@@ -1,65 +1,17 @@
-import 'package:angular/angular.dart' show Injectable;
 import 'package:http/http.dart' as http;
 
-import 'package:panda/common/credentials.dart';
-import 'package:panda/common/error_or.dart';
-import 'package:panda/common/tikz_compilation_result.dart';
 import 'middleware.dart';
 import 'rest_api_response.dart';
 
 typedef _Fetch = Future<http.Response> Function(
     String url, Map<String, String> headers, Map<String, dynamic> body);
 
-@Injectable()
 class RestApiClient {
   final http.Client _client;
-
   final String _apiAddress;
   final List<Middleware> _middlewares;
 
   RestApiClient(this._client, this._apiAddress, this._middlewares);
-
-  Future<ErrorOr<void>> register(Credentials credentials) async {
-    final response = await post('/auth/register', {
-      'username': credentials.username,
-      'password': credentials.password,
-    });
-    if (response.statusCode == 200) {
-      return ErrorOr.successful(true);
-    }
-    return ErrorOr.unsuccessful(response.body['message']);
-  }
-
-  Future<ErrorOr<String>> login(Credentials credentials) async {
-    final response = await post('/auth/login', {
-      'username': credentials.username,
-      'password': credentials.password,
-    });
-    if (response.statusCode != 200) {
-      return ErrorOr.unsuccessful(response.body['message']);
-    }
-    return ErrorOr.successful(response.body['token']);
-  }
-
-  Future<Map<String, dynamic>> fetchFigure(int id) async {
-    return (await get('/figure/$id')).body;
-  }
-
-  Future<List<dynamic>> fetchFigures() async {
-    return (await get('/figure')).body;
-  }
-
-  Future<int> createFigure(String name) async {
-    return (await post('/figure', {"name": name, "code": ""})).body;
-  }
-
-  Future<TikzCompilationResult> compile(String code) async {
-    final response = await post('/figure/compile', {'code': code});
-    if (response.statusCode == 400) {
-      return TikzCompilationResult.unsuccessful(response.body['errors']);
-    }
-    return TikzCompilationResult.successful(response.body['compiled']);
-  }
 
   Future<RestApiResponse> get(String url) async {
     return await _fetch(

@@ -15,7 +15,7 @@ class FiguresService {
   Figure getFigure(int id) => _figures[id];
 
   void reloadFigures() async {
-    final response = await _apiClient.fetchFigures();
+    final response = await _fetchFigures();
     _figures.clear();
     for (final figureDesc in response) {
       _figures[figureDesc['id']] =
@@ -25,7 +25,7 @@ class FiguresService {
 
   void createNewFigure() async {
     final name = _getNextFigureName();
-    final figureId = await _apiClient.createFigure(name);
+    final figureId = await _createFigure(name);
     _figures[figureId] = Figure(_apiClient, figureId, name, "");
   }
 
@@ -38,5 +38,13 @@ class FiguresService {
       }
     }
     return "Unnamed figure ${lastUsedIndex + 1}";
+  }
+
+  Future<List<dynamic>> _fetchFigures() async {
+    return (await _apiClient.get('/figure')).body;
+  }
+
+  Future<int> _createFigure(String name) async {
+    return (await _apiClient.post('/figure', {"name": name, "code": ""})).body;
   }
 }

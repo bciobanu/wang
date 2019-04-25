@@ -45,18 +45,16 @@ class PandaAppComponent implements OnInit {
   }
 
   void onLoginCredentials(Credentials credentials) async {
-    final loginResult = await _apiClient.login(credentials);
-    if (loginResult.hasError) {
-      loginError = loginResult.error;
-    } else {
-      AuthService.setAuthenticated(loginResult.value);
+    final error = await _authService.login(credentials);
+    if (error.isPresent) {
+      loginError = error.value;
     }
   }
 
   void onRegisterCredentials(Credentials credentials) async {
-    final registerResult = await _apiClient.register(credentials);
-    if (registerResult.hasError) {
-      registrationError = registerResult.error;
+    final error = await _authService.register(credentials);
+    if (error.isPresent) {
+      registrationError = error.value;
     } else {
       registrationSuccessful = true;
     }

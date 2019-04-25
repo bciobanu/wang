@@ -3,7 +3,7 @@ import 'package:panda/rest_api_client/rest_api_client.dart';
 import 'tikz_compilation_result.dart';
 
 class Figure {
-  RestApiClient _apiClient;
+  final RestApiClient _apiClient;
 
   final int id;
   String _name;
@@ -50,7 +50,7 @@ class Figure {
   String get code => _code;
 
   Future<void> reloadCode() async =>
-      _code = (await _apiClient.fetchFigure(id))['code'];
+      _code = (await _apiClient.get('/figure/$id')).body['code'];
 
   bool get hasDirtyCode => _dirtyCode != null && _dirtyCode != _code;
 
@@ -83,7 +83,17 @@ class Figure {
 
   void compile() async {
     _compiling = true;
-    _compilationResult = await _apiClient.compile(dirtyCode);
+    _compilationResult = await _compile();
     _compiling = false;
+  }
+
+  Future<TikzCompilationResult> _compile() async {
+    final response = await _apiClient.post('/figure/compile', {
+      'code': dirtyCode,
+    });
+    if (response.statusCode == 400) {
+      return TikzCompilationResult.unsuccessful(response.body['errors']);
+    }
+    return TikzCompilationResult.successful(response.body['compiled']);
   }
 }
