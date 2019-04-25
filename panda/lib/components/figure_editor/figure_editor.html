@@ -12,30 +12,30 @@
         <template [ngIf]="editingFigureName">
             <input type="text" #nameInput [value]="figure.dirtyName" (input)="setFigureDirtyName(nameInput.value)"
                    (keyup.enter)="commitFigureName()"/>
-            <material-fab *ngIf="!committingFigureNameEdit" style="margin-left: 10px;" mini
+            <material-fab *ngIf="!figure.committingName" style="margin-left: 10px;" mini
                           (trigger)="commitFigureName()">
                 <material-icon icon="done"></material-icon>
             </material-fab>
-            <material-fab *ngIf="!committingFigureNameEdit" style="margin-left: 10px;" mini
+            <material-fab *ngIf="!figure.committingName" style="margin-left: 10px;" mini
                           (trigger)="cancelEditingFigureName()">
                 <material-icon icon="clear"></material-icon>
             </material-fab>
-            <material-spinner *ngIf="committingFigureNameEdit" style="margin-left: 20px;"></material-spinner>
+            <material-spinner *ngIf="figure.committingName" style="margin-left: 20px;"></material-spinner>
         </template>
         <material-button style="float: right; position: relative"
-                         [disabled]="compilingFigure"
+                         [disabled]="figure.isCompiling"
                          (trigger)="compileFigure()">
-            <div class="white-button-overlay" [style.opacity]="compilingFigure ? '0.4' : '0'">
-                <material-spinner *ngIf="compilingFigure" style="margin: 0 auto;"></material-spinner>
+            <div class="white-button-overlay" [style.opacity]="figure.isCompiling ? '0.4' : '0'">
+                <material-spinner *ngIf="figure.isCompiling" style="margin: 0 auto;"></material-spinner>
             </div>
             <material-icon icon="settings"></material-icon>
             Compile
         </material-button>
         <material-button style="float: right; position: relative"
-                         [disabled]="!figure.hasDirtyCode || committingFigureCode"
+                         [disabled]="!figure.hasDirtyCode || figure.committingCode"
                          (trigger)="commitFigureCode()">
-            <div class="white-button-overlay" [style.opacity]="committingFigureCode ? '0.4' : '0'">
-                <material-spinner *ngIf="committingFigureCode" style="margin: 0 auto;"></material-spinner>
+            <div class="white-button-overlay" [style.opacity]="figure.committingCode ? '0.4' : '0'">
+                <material-spinner *ngIf="figure.committingCode" style="margin: 0 auto;"></material-spinner>
             </div>
             <material-icon icon="save"></material-icon>
             Save

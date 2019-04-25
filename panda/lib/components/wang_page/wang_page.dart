@@ -25,19 +25,28 @@ class WangPageComponent implements OnInit {
   final FiguresService _figuresService;
 
   bool loadedFigures = false;
-  Iterable<Figure> figures;
   int highlightedFigureId = null;
 
   WangPageComponent(this._figuresService);
 
-  @override
-  void ngOnInit() async {
-    await _figuresService.reloadFigures();
-    figures = _figuresService.figures;
-    loadedFigures = true;
-  }
+  Iterable<Figure> get figures => _figuresService.figures;
 
   void createFigure() async {
     await _figuresService.createNewFigure();
+  }
+
+  void setHighlightedFigureId(int figureId) {
+    highlightedFigureId = figureId;
+  }
+
+  bool get hasHighlightedFigureId => highlightedFigureId != null;
+
+  Iterable<int> get highlightedFigureIds =>
+      hasHighlightedFigureId ? [highlightedFigureId] : [];
+
+  @override
+  void ngOnInit() async {
+    await _figuresService.reloadFigures();
+    loadedFigures = true;
   }
 }

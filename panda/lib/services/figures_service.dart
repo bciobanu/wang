@@ -2,10 +2,11 @@ import 'dart:math' show max;
 
 import 'package:angular/angular.dart';
 import 'package:panda/common/tikz_compilation_result.dart';
-import 'package:panda/services/compile_service.dart';
 import 'package:panda/services/rest_api_client.dart';
 
 class Figure {
+  RestApiClient _apiClient;
+
   final int id;
   String _name;
   String _code = null;
@@ -13,42 +14,90 @@ class Figure {
   String _dirtyName = null;
   String _dirtyCode = null;
 
+  bool _committingName = false;
+  bool _committingCode = false;
+  bool _compiling = false;
+
   TikzCompilationResult _compilationResult = null;
 
-  Figure(this.id, this._name, [this._code]);
+  Figure._(this._apiClient, this.id, this._name, [this._code]);
 
   String get name => _name;
-
-  bool get hasCode => _code != null;
-
-  String get code => _code;
 
   bool get hasDirtyName => _dirtyName != null && _dirtyName != _name;
 
   String get dirtyName => _dirtyName ?? _name;
 
+  void setDirtyName(String dirtyName) => _dirtyName = dirtyName;
+
+  void clearDirtyName() => _dirtyName = null;
+
+  bool get committingName => _committingName;
+
+  void commitName() async {
+    if (!hasDirtyName) {
+      return;
+    }
+    _committingName = true;
+    final response = await _apiClient.put('/figure/$id', {'name': _dirtyName});
+    if (response.statusCode == 201) {
+      _name = _dirtyName;
+    }
+    _dirtyName = null;
+    _committingName = false;
+  }
+
+  bool get hasCode => _code != null;
+
+  String get code => _code;
+
+  void reloadCode() async => _code = (await _apiClient.fetchFigure(id))['code'];
+
   bool get hasDirtyCode => _dirtyCode != null && _dirtyCode != _code;
 
   String get dirtyCode => _dirtyCode ?? _code;
 
+  void setDirtyCode(String dirtyCode) => _dirtyCode = dirtyCode;
+
+  void clearDirtyCode() => _dirtyCode = null;
+
+  bool get committingCode => _committingCode;
+
+  void commitCode() async {
+    if (!hasDirtyCode) {
+      return;
+    }
+    _committingCode = true;
+    final response = await _apiClient.put('/figure/$id', {'code': _dirtyCode});
+    if (response.statusCode == 201) {
+      _code = _dirtyCode;
+    }
+    _dirtyCode = null;
+    _committingCode = false;
+  }
+
   bool get hasCompilationResult => _compilationResult != null;
 
   TikzCompilationResult get compilationResult => _compilationResult;
+
+  bool get isCompiling => _compiling;
+
+  void compile() async {
+    _compiling = true;
+    _compilationResult = await _apiClient.compile(dirtyCode);
+    _compiling = false;
+  }
 }
 
 @Injectable()
 class FiguresService {
-  final CompileService _compileService;
   final RestApiClient _apiClient;
 
   final _figures = Map<int, Figure>();
 
-  FiguresService(this._compileService, this._apiClient);
+  FiguresService(this._apiClient);
 
   Iterable<Figure> get figures => _figures.values;
-
-  bool isFigureLoaded(int id) =>
-      _figures.containsKey(id) && _figures[id].hasCode;
 
   Figure getFigure(int id) => _figures[id];
 
@@ -56,59 +105,15 @@ class FiguresService {
     final response = await _apiClient.fetchFigures();
     _figures.clear();
     for (final figureDesc in response) {
-      _figures[figureDesc['id']] = Figure(figureDesc['id'], figureDesc['name']);
+      _figures[figureDesc['id']] =
+          Figure._(_apiClient, figureDesc['id'], figureDesc['name']);
     }
-  }
-
-  void loadFigureCode(int id) async {
-    final response = await _apiClient.fetchFigure(id);
-    _figures.putIfAbsent(id, () => Figure(response['id'], response['name']));
-    _figures[id]._code = response['code'];
   }
 
   void createNewFigure() async {
     final name = _getNextFigureName();
     final figureId = await _apiClient.createFigure(name);
-    _figures[figureId] = Figure(figureId, name, "");
-  }
-
-  void setFigureDirtyName(int id, String dirtyName) =>
-      _figures[id]._dirtyName = dirtyName;
-
-  void clearFigureDirtyName(int id) => _figures[id]._dirtyName = null;
-
-  void commitFigureName(int id) async {
-    if (!_figures[id].hasDirtyName) {
-      return;
-    }
-    final response = await _apiClient
-        .put('/figure/$id', body: {'name': _figures[id]._dirtyName});
-    if (response.statusCode == 201) {
-      _figures[id]._name = _figures[id]._dirtyName;
-    }
-    _figures[id]._dirtyName = null;
-  }
-
-  void setFigureDirtyCode(int id, String dirtyCode) =>
-      _figures[id]._dirtyCode = dirtyCode;
-
-  void clearFigureDirtyCode(int id) => _figures[id]._dirtyCode = null;
-
-  void commitFigureCode(int id) async {
-    if (!_figures[id].hasDirtyCode) {
-      return;
-    }
-    final response = await _apiClient
-        .put('/figure/$id', body: {'code': _figures[id]._dirtyCode});
-    if (response.statusCode == 201) {
-      _figures[id]._code = _figures[id]._dirtyCode;
-    }
-    _figures[id]._dirtyCode = null;
-  }
-
-  void compileFigure(int id) async {
-    _figures[id]._compilationResult =
-        await _compileService.compile(_figures[id].dirtyCode);
+    _figures[figureId] = Figure._(_apiClient, figureId, name, "");
   }
 
   String _getNextFigureName() {

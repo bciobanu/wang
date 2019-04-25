@@ -6,7 +6,7 @@
         <div style="flex: 1">
             <material-list *ngIf="figures.isNotEmpty">
                 <div label>My figures</div>
-                <material-list-item *ngFor="let figure of figures" (trigger)="highlightedFigureId = figure.id">
+                <material-list-item *ngFor="let figure of figures" (trigger)="setHighlightedFigureId(figure.id)">
                     {{figure.name}}
                 </material-list-item>
             </material-list>
@@ -18,10 +18,11 @@
             </div>
         </div>
         <div style="flex: 3">
-            <div class="centered" *ngIf="highlightedFigureId == null">
+            <div class="centered" *ngIf="!hasHighlightedFigureId">
                 <em>No figure selected. Select a figure from the list to view & edit its code here.</em>
             </div>
-            <figure-editor *ngIf="highlightedFigureId != null" [figureId]="highlightedFigureId"></figure-editor>
+            <figure-editor *ngFor="let highlightedFigureId of highlightedFigureIds" [figureId]="highlightedFigureId">
+            </figure-editor>
         </div>
     </div>
 </div>

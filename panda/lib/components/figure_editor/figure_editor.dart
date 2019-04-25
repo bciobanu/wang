@@ -24,12 +24,7 @@ class FigureEditorComponent implements OnInit {
   int figureId;
 
   bool isFigureLoaded = false;
-
-  bool committingFigureNameEdit = false;
   bool editingFigureName = false;
-
-  bool committingFigureCode = false;
-  bool compilingFigure = false;
 
   FigureEditorComponent(this._figuresService);
 
@@ -40,37 +35,25 @@ class FigureEditorComponent implements OnInit {
   void cancelEditingFigureName() => editingFigureName = false;
 
   void commitFigureName() async {
-    committingFigureNameEdit = true;
-    await _figuresService.commitFigureName(figureId);
-    committingFigureNameEdit = false;
+    await figure.commitName();
     cancelEditingFigureName();
   }
 
   void commitFigureCode() async {
-    committingFigureCode = true;
-    await _figuresService.commitFigureCode(figureId);
-    committingFigureCode = false;
+    await figure.commitCode();
   }
 
   void compileFigure() async {
-    compilingFigure = true;
-    await _figuresService.compileFigure(figureId);
-    compilingFigure = false;
+    await figure.compile();
   }
 
-  void setFigureDirtyCode(String dirtyCode) =>
-      _figuresService.setFigureDirtyCode(figureId, dirtyCode);
+  void setFigureDirtyCode(String dirtyCode) => figure.setDirtyCode(dirtyCode);
 
-  void setFigureDirtyName(String dirtyName) =>
-      _figuresService.setFigureDirtyName(figureId, dirtyName);
+  void setFigureDirtyName(String dirtyName) => figure.setDirtyName(dirtyName);
 
   @override
   void ngOnInit() async {
-    cancelEditingFigureName();
-    isFigureLoaded = false;
-    if (!_figuresService.isFigureLoaded(figureId)) {
-      await _figuresService.loadFigureCode(figureId);
-    }
+    await figure.reloadCode();
     isFigureLoaded = true;
   }
 }
