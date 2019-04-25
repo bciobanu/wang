@@ -26,3 +26,11 @@
     display: flex;
     align-items: center;
 }
+
+.compilation-result-container {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    font-family: monospace;
+    border: 1px solid #777;
+    padding: 10px;
+}

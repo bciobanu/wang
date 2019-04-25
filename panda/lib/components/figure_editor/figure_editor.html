@@ -25,7 +25,12 @@
             </material-fab>
             <material-spinner *ngIf="committingFigureNameEdit" style="margin-left: 20px;"></material-spinner>
         </template>
-        <material-button style="float: right;">
+        <material-button style="float: right; position: relative"
+                         [disabled]="compilingFigure"
+                         (trigger)="compileFigure()">
+            <div class="white-button-overlay" [style.opacity]="compilingFigure ? '0.4' : '0'">
+                <material-spinner *ngIf="compilingFigure" style="margin: 0 auto;"></material-spinner>
+            </div>
             <material-icon icon="settings"></material-icon>
             Compile
         </material-button>
@@ -39,8 +44,18 @@
             Save
         </material-button>
     </h2>
-    <textarea #codeEditor style="font-family: monospace; resize: none; flex: 1"
+    <textarea #codeEditor style="font-family: monospace; resize: none; height: 320px;"
               (input)="setCurrentFigureDirtyCode(codeEditor.value)">
         {{currentFigureDirtyCode}}
     </textarea>
+    <div *ngIf="isCurrentFigureCompiled" style="flex: 1; margin-top: 20px;">
+        <h3>Tikz compilation result:</h3>
+        <div class="compilation-result-container"
+             [style.border-color]="!currentFigureCompilationResult.isSuccessful ? 'red' : '#333'">
+            <div *ngFor="let error of currentFigureCompilationResult.errors">
+                <span style="color: red;">Error</span> (code={{error.code}} {{error.codeName}}): {{error.description}}
+            </div>
+            <pre>{{currentFigureCompilationResult.tikzCode}}</pre>
+        </div>
+    </div>
 </div>

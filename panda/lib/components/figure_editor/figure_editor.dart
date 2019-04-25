@@ -3,6 +3,8 @@ import 'package:angular_components/material_button/material_button.dart';
 import 'package:angular_components/material_button/material_fab.dart';
 import 'package:angular_components/material_icon/material_icon.dart';
 import 'package:angular_components/material_spinner/material_spinner.dart';
+import 'package:panda/common/tikz_compilation_result.dart';
+import 'package:panda/services/compile_service.dart';
 import 'package:panda/services/figures_service.dart';
 
 @Component(
@@ -19,6 +21,7 @@ import 'package:panda/services/figures_service.dart';
 )
 class FigureEditorComponent implements OnChanges {
   final FiguresService _figuresService;
+  final CompileService _compileService;
 
   @Input()
   int figureId = null;
@@ -31,12 +34,16 @@ class FigureEditorComponent implements OnChanges {
   String figureNameDirty = null;
 
   bool committingFigureCode = false;
+  bool compilingFigure = false;
 
   /// A Map from figureId to the code that should be displayed in the editor for
   /// that figure.
   final _dirtyCode = Map<int, String>();
 
-  FigureEditorComponent(this._figuresService);
+  // A Map from figureId to the result of the last Tikz compilation.
+  final _compiledTikz = Map<int, TikzCompilationResult>();
+
+  FigureEditorComponent(this._figuresService, this._compileService);
 
   bool get hasHighlightedFigure => figureId != null;
 
@@ -44,11 +51,16 @@ class FigureEditorComponent implements OnChanges {
 
   bool get isCurrentFigureDirty => isDirty(figureId);
 
+  String get currentFigureDirtyCode => _dirtyCode[figureId];
+
+  bool get isCurrentFigureCompiled => _compiledTikz.containsKey(figureId);
+
+  TikzCompilationResult get currentFigureCompilationResult =>
+      _compiledTikz[figureId];
+
   bool isDirty(int figureId) =>
       _dirtyCode.containsKey(figureId) &&
       _figuresService.getFigure(figureId).code != _dirtyCode[figureId];
-
-  String get currentFigureDirtyCode => _dirtyCode[figureId];
 
   void setEditingFigureName() {
     figureNameDirty = figure.name;
@@ -73,6 +85,14 @@ class FigureEditorComponent implements OnChanges {
     committingFigureCode = true;
     await _figuresService.updateFigureCode(figureId, currentFigureDirtyCode);
     committingFigureCode = false;
+  }
+
+  void compileFigure() async {
+    compilingFigure = true;
+    int compilingFigureId = figureId;
+    final compileResult = await _compileService.compile(currentFigureDirtyCode);
+    _compiledTikz[compilingFigureId] = compileResult;
+    compilingFigure = false;
   }
 
   void setCurrentFigureDirtyCode(String dirtyCode) {
