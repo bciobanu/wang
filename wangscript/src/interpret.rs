@@ -152,7 +152,7 @@ impl Interpreter {
     }
 
     fn gen_for_node<W: Write>(&self, stream: &mut W, obj: &Obj) -> Result<(), ()> {
-        stream.write_all(b"\\node {").map_err(|_| ())?;
+        stream.write_all(b"\\node{").map_err(|_| ())?;
         match *obj.borrow() {
             Value::Obj(ref map) => {
                 map.get("title").and_then(
