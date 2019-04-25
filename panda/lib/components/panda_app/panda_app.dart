@@ -17,13 +17,14 @@ import 'package:panda/rest_api_client/rest_api_client.dart';
     WangPageComponent,
     coreDirectives,
   ],
+  exports: [AuthService],
   styleUrls: [
     'panda_app.css',
     'package:angular_components/app_layout/layout.scss.css',
   ],
 )
 class PandaAppComponent implements OnInit {
-  AuthService authService;
+  AuthService _authService;
   RestApiClient _apiClient;
 
   bool attemptedInitialLoad = false;
@@ -32,11 +33,14 @@ class PandaAppComponent implements OnInit {
   String registrationError = "";
   bool registrationSuccessful = false;
 
-  PandaAppComponent(this.authService, this._apiClient);
+  PandaAppComponent(this._authService, this._apiClient);
 
   @override
   void ngOnInit() async {
-    await _apiClient.fetchOwnUser();
+    final response = await _apiClient.get('/user');
+    if (!AuthService.isAuthenticated || response.statusCode != 200) {
+      AuthService.setNotAuthenticated();
+    }
     attemptedInitialLoad = true;
   }
 
@@ -45,7 +49,7 @@ class PandaAppComponent implements OnInit {
     if (loginResult.hasError) {
       loginError = loginResult.error;
     } else {
-      authService.setAuthenticated(loginResult.value);
+      AuthService.setAuthenticated(loginResult.value);
     }
   }
 

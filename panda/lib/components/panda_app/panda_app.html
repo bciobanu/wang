@@ -5,8 +5,8 @@
             <em>Drawing diagrams made easy</em>
         </nav>
         <div class="material-spacer"></div>
-        <nav *ngIf="attemptedInitialLoad && authService.isAuthenticated" class="logout-link"
-             (click)="authService.setNotAuthenticated()">
+        <nav *ngIf="attemptedInitialLoad && AuthService.isAuthenticated" class="logout-link"
+             (click)="AuthService.setNotAuthenticated()">
             <div class="logout-content">Logout</div>
         </nav>
     </div>
@@ -16,10 +16,10 @@
     <em>Loading...</em>
     <material-spinner style="margin-left: 10px;"></material-spinner>
 </div>
-<div *ngIf="attemptedInitialLoad && authService.isAuthenticated">
+<div *ngIf="attemptedInitialLoad && AuthService.isAuthenticated">
     <wang-page></wang-page>
 </div>
-<div *ngIf="attemptedInitialLoad && !authService.isAuthenticated"
+<div *ngIf="attemptedInitialLoad && !AuthService.isAuthenticated"
      style="display: flex; margin-top: 50px; justify-content: space-around;">
     <login-form [loginError]="loginError" (loginSubmit)="onLoginCredentials($event)" style="flex: 10;"></login-form>
     <div style="display: flex; flex: 1; max-width: 40px; align-items: center;">

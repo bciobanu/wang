@@ -13,13 +13,13 @@ import 'main.template.dart' show injector$Injector;
 
 @GenerateInjector([
   ClassProvider(Client, useClass: BrowserClient),
-  ClassProvider(AuthService),
   ValueProvider.forToken(apiAddress, 'http://localhost:3000/api'),
   FactoryProvider(
     RestApiClient,
     restApiClientFactory,
-    deps: [Client, apiAddress, AuthService],
+    deps: [Client, apiAddress],
   ),
+  ClassProvider(AuthService),
   ClassProvider(FiguresService),
 ])
 final InjectorFactory injector = injector$Injector;

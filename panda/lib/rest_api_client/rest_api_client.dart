@@ -4,7 +4,6 @@ import 'package:http/http.dart' as http;
 import 'package:panda/common/credentials.dart';
 import 'package:panda/common/error_or.dart';
 import 'package:panda/common/tikz_compilation_result.dart';
-import 'package:panda/services/auth_service.dart';
 import 'middleware.dart';
 import 'rest_api_response.dart';
 
@@ -14,28 +13,11 @@ typedef _Fetch = Future<http.Response> Function(
 @Injectable()
 class RestApiClient {
   final http.Client _client;
-  final AuthService _authService;
 
   final String _apiAddress;
   final List<Middleware> _middlewares;
 
-  RestApiClient(
-      this._client, this._apiAddress, this._authService, this._middlewares);
-
-  Future<void> fetchOwnUser() async {
-    if (!_authService.hasAuthToken) {
-      return;
-    }
-    final response = await get('/user');
-    if (response.statusCode == 200) {
-      _authService.setAuthenticated(AuthData(
-        authToken: _authService.authToken,
-        username: response.body['username'],
-      ));
-    } else {
-      _authService.setNotAuthenticated();
-    }
-  }
+  RestApiClient(this._client, this._apiAddress, this._middlewares);
 
   Future<ErrorOr<void>> register(Credentials credentials) async {
     final response = await post('/auth/register', {
@@ -48,7 +30,7 @@ class RestApiClient {
     return ErrorOr.unsuccessful(response.body['message']);
   }
 
-  Future<ErrorOr<AuthData>> login(Credentials credentials) async {
+  Future<ErrorOr<String>> login(Credentials credentials) async {
     final response = await post('/auth/login', {
       'username': credentials.username,
       'password': credentials.password,
@@ -56,8 +38,7 @@ class RestApiClient {
     if (response.statusCode != 200) {
       return ErrorOr.unsuccessful(response.body['message']);
     }
-    return ErrorOr.successful(AuthData(
-        authToken: response.body['token'], username: credentials.username));
+    return ErrorOr.successful(response.body['token']);
   }
 
   Future<Map<String, dynamic>> fetchFigure(int id) async {
@@ -99,8 +80,8 @@ class RestApiClient {
 
   Future<RestApiResponse> put(String url, Map<String, String> body) async {
     return await _fetch(
-          (url, headers, body) async =>
-      await _client.put(url, headers: headers, body: body),
+      (url, headers, body) async =>
+          await _client.put(url, headers: headers, body: body),
       url,
       body,
     );
