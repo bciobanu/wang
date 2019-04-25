@@ -29,8 +29,12 @@
             <material-icon icon="settings"></material-icon>
             Compile
         </material-button>
-        <material-button style="float: right;" [disabled]="!isCurrentFigureDirty || committingFigureCode"
+        <material-button style="float: right; position: relative"
+                         [disabled]="!isCurrentFigureDirty || committingFigureCode"
                          (trigger)="commitFigureCode()">
+            <div class="white-button-overlay" [style.opacity]="committingFigureCode ? '0.4' : '0'">
+                <material-spinner *ngIf="committingFigureCode" style="margin: 0 auto;"></material-spinner>
+            </div>
             <material-icon icon="save"></material-icon>
             Save
         </material-button>
