@@ -164,9 +164,9 @@ impl Interpreter {
                 map.get("__sons__").ok_or(()).and_then(
                     |inner| inner.borrow().as_list().ok_or(()).and_then(|sons| {
                         for son in sons {
-                            stream.write_all(b"child {").map_err(|_| ())?;
+                            stream.write_all(b"child { ").map_err(|_| ())?;
                             self.gen_for_node(stream, son)?;
-                            stream.write_all(b"} ").map_err(|_| ())?;
+                            stream.write_all(b" }").map_err(|_| ())?;
                         }
                         Ok(())
                     })
