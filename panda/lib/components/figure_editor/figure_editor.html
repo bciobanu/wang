@@ -5,24 +5,38 @@
     <material-spinner></material-spinner>
 </div>
 <div class="editor-container" *ngIf="hasHighlightedFigure && isFigureLoaded">
-    <h2 *ngIf="!editingFigureName">
-        {{figure.name}}
-        <material-fab style="margin-left: 10px;" mini (trigger)="setEditingFigureName()">
-            <material-icon icon="edit"></material-icon>
-        </material-fab>
+    <h2>
+        <template [ngIf]="!editingFigureName">
+            {{figure.name}}
+            <material-fab style="margin-left: 10px;" mini (trigger)="setEditingFigureName()">
+                <material-icon icon="edit"></material-icon>
+            </material-fab>
+        </template>
+        <template [ngIf]="editingFigureName">
+            <input type="text" #nameInput [value]="figureNameDirty" (input)="figureNameDirty = nameInput.value"
+                   (keyup.enter)="commitFigureName()"/>
+            <material-fab *ngIf="!committingFigureNameEdit" style="margin-left: 10px;" mini
+                          (trigger)="commitFigureName()">
+                <material-icon icon="done"></material-icon>
+            </material-fab>
+            <material-fab *ngIf="!committingFigureNameEdit" style="margin-left: 10px;" mini
+                          (trigger)="cancelEditingFigureName()">
+                <material-icon icon="clear"></material-icon>
+            </material-fab>
+            <material-spinner *ngIf="committingFigureNameEdit" style="margin-left: 20px;"></material-spinner>
+        </template>
+        <material-button style="float: right;">
+            <material-icon icon="settings"></material-icon>
+            Compile
+        </material-button>
+        <material-button style="float: right;" [disabled]="!isCurrentFigureDirty || committingFigureCode"
+                         (trigger)="commitFigureCode()">
+            <material-icon icon="save"></material-icon>
+            Save
+        </material-button>
     </h2>
-    <h2 *ngIf="editingFigureName">
-        <input type="text" #nameInput [value]="figureNameDirty" (input)="figureNameDirty = nameInput.value"
-               (keyup.enter)="commitFigureName()">
-        <material-fab *ngIf="!committingFigureNameEdit" style="margin-left: 10px;" mini
-                      (trigger)="commitFigureName()">
-            <material-icon icon="done"></material-icon>
-        </material-fab>
-        <material-fab *ngIf="!committingFigureNameEdit" style="margin-left: 10px;" mini
-                      (trigger)="cancelEditingFigureName()">
-            <material-icon icon="clear"></material-icon>
-        </material-fab>
-        <material-spinner *ngIf="committingFigureNameEdit" style="margin-left: 20px;"></material-spinner>
-    </h2>
-    <pre>{{figure.code}}</pre>
+    <textarea #codeEditor style="font-family: monospace; resize: none; flex: 1"
+              (input)="setCurrentFigureDirtyCode(codeEditor.value)">
+        {{currentFigureDirtyCode}}
+    </textarea>
 </div>

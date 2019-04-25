@@ -51,12 +51,20 @@ class FiguresService {
   }
 
   void updateFigureName(int id, String name) async {
-//    await Future.delayed(Duration(seconds: 1));
     final response = await _apiClient.put('/figure/$id', body: {
       'name': name
     });
     if (response.statusCode == 201) {
       _figures[id]._name = name;
+    }
+  }
+
+  void updateFigureCode(int id, String code) async {
+    final response = await _apiClient.put('/figure/$id', body: {
+      'code': code
+    });
+    if (response.statusCode == 201) {
+      _figures[id]._code = code;
     }
   }
 
