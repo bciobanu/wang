@@ -49,13 +49,13 @@
         {{currentFigureDirtyCode}}
     </textarea>
     <div *ngIf="isCurrentFigureCompiled" style="flex: 1; margin-top: 20px;">
-        <h3>Tikz compilation result:</h3>
-        <div class="compilation-result-container"
-             [style.border-color]="!currentFigureCompilationResult.isSuccessful ? 'red' : '#333'">
+        <h3 *ngIf="currentFigureCompilationResult.isSuccessful">Tikz code:</h3>
+        <h3 *ngIf="!currentFigureCompilationResult.isSuccessful">Tikz compiled with errors:</h3>
+        <div class="compilation-result-container">
             <div *ngFor="let error of currentFigureCompilationResult.errors">
                 <span style="color: red;">Error</span> (code={{error.code}} {{error.codeName}}): {{error.description}}
             </div>
-            <pre>{{currentFigureCompilationResult.tikzCode}}</pre>
+            <pre *ngIf="currentFigureCompilationResult.isSuccessful">{{currentFigureCompilationResult.tikzCode}}</pre>
         </div>
     </div>
 </div>
