@@ -10,6 +10,7 @@ message Error {
     enum Code {
         UNDEFINED = 0;
         NETWORK_ERROR = 1;
+        UNKNOWN_INTERPRETER_ERROR = 2;
         // Syntax errors / other errors from the tikz compiler should come here.
     }
 

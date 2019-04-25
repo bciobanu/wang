@@ -4,7 +4,7 @@
 
 mod ast;
 mod lex;
-mod interpret;
+pub mod interpret;
 
 #[cfg(test)]
 mod tests {

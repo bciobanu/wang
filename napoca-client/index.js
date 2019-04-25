@@ -11,7 +11,6 @@ exports.NapocaClient = class NapocaClient {
         this._packageDefinition = protoLoader.loadSync(protoPath, {
             keepCase: true,
             longs: String,
-            enums: String,
             defaults: true,
             oneofs: true
         });
@@ -41,7 +40,7 @@ exports.NapocaClient = class NapocaClient {
         }, (err, wangResponse) => {
             if (err != null) {
                 errorCallback([{
-                    code: this._proto.Error.type.enumType[0].value[1],
+                    code: this._proto.Error.type.enumType[0].value[1].number,
                     description: err.toString()
                 }]);
             } else if (wangResponse.errors.length > 0) {

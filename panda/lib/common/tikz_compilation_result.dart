@@ -1,9 +1,8 @@
 class TikzCompilationError {
   final int code;
-  final String codeName;
   final String description;
 
-  TikzCompilationError(this.code, this.codeName, this.description);
+  TikzCompilationError(this.code, this.description);
 }
 
 class TikzCompilationResult {
@@ -17,8 +16,7 @@ class TikzCompilationResult {
         this.tikzCode = null {
     for (final error in errors) {
       this.errors.add(TikzCompilationError(
-            error['code']['number'],
-            error['code']['name'],
+            error['code'],
             error['description'],
           ));
     }

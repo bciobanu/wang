@@ -8,6 +8,7 @@ extern crate futures_cpupool;
 extern crate tls_api;
 extern crate tls_api_stub;
 extern crate tls_api_native_tls;
+extern crate wangscript;
 
 pub mod napoca;
 pub mod napoca_grpc;
@@ -35,10 +36,17 @@ impl Napoca for NapocaImpl {
 
         info!(target: "requests", "Wang request with code of length = '{}'", wang_code.len());
 
-        // TODO(darius98): Call AndreiNet's implementation here!
-        let tikz = wang_code;
+        let mut tikz = Vec::<u8>::new();
+        let result = wangscript::interpret::translate(&mut wang_code.as_bytes(), &mut tikz);
 
-        r.set_tikz(tikz);
+        if result.is_err() {
+            let mut err = napoca::Error::new();
+            err.set_code(napoca::Error_Code::UNKNOWN_INTERPRETER_ERROR);
+            err.set_description("Unknown interpreter error.".to_string());
+            r.mut_errors().push(err);
+        } else {
+            r.set_tikz(String::from_utf8(tikz).unwrap());
+        }
 
         return SingleResponse::completed(r);
     }
