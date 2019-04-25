@@ -1,12 +1,13 @@
 import 'package:panda/rest_api_client/middleware.dart';
+import 'package:panda/rest_api_client/rest_api_request_builder.dart';
 import 'package:panda/rest_api_client/rest_api_response.dart';
 import 'package:panda/services/auth_service.dart';
 
-class AuthMiddleware implements Middleware {
+class AuthMiddleware extends Middleware {
   @override
-  void onRequest(Map<String, String> headers, [Map<String, dynamic> body]) {
+  void onRequest(RestApiRequestBuilder requestBuilder) {
     if (AuthService.hasAuthToken) {
-      headers['x-access-token'] = AuthService.authToken;
+      requestBuilder.headers['x-access-token'] = AuthService.authToken;
     }
   }
 
