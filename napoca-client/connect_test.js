@@ -5,7 +5,12 @@ console.log("[Napoca Client] Trying to send a request to Napoca, on localhost:" 
 
 const client = new napoca_client.NapocaClient("localhost:" + port);
 
-client.requestParse("Hello, World!", (tikz) => {
+client.requestParse(
+    "root = node(\"Radacina\");\n" +
+    "a = node(\"fiu 1\");\n" +
+    "b = node(\"fiu 2\");\n" +
+    "edge(root, a);\n" +
+    "edge(root, b);\n", (tikz) => {
     console.log("[Napoca Client] Received response: '" + tikz + "'");
     console.log("[Napoca Client] Success!");
     process.exit(0);
