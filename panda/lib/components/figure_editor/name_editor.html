@@ -1,0 +1,19 @@
+<template [ngIf]="!editing">
+    {{figure.name}}
+    <material-fab style="margin-left: 10px;" mini (trigger)="setEditing()">
+        <material-icon icon="edit"></material-icon>
+    </material-fab>
+</template>
+<template [ngIf]="editing">
+    <input type="text" #nameInput [value]="figure.dirtyName" (input)="setDirtyName(nameInput.value)"
+           (keyup.enter)="commit()"/>
+    <material-fab *ngIf="!figure.committingName" style="margin-left: 10px;" mini
+                  (trigger)="commit()">
+        <material-icon icon="done"></material-icon>
+    </material-fab>
+    <material-fab *ngIf="!figure.committingName" style="margin-left: 10px;" mini
+                  (trigger)="cancelEditing()">
+        <material-icon icon="clear"></material-icon>
+    </material-fab>
+    <material-spinner *ngIf="figure.committingName" style="margin-left: 20px;"></material-spinner>
+</template>

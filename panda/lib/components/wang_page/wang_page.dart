@@ -4,6 +4,8 @@ import 'package:angular_components/material_icon/material_icon.dart';
 import 'package:angular_components/material_list/material_list.dart';
 import 'package:angular_components/material_list/material_list_item.dart';
 import 'package:angular_components/material_spinner/material_spinner.dart';
+
+import 'package:panda/common/figure.dart';
 import 'package:panda/components/figure_editor/figure_editor.dart';
 import 'package:panda/services/figures_service.dart';
 
@@ -41,8 +43,8 @@ class WangPageComponent implements OnInit {
 
   bool get hasHighlightedFigureId => highlightedFigureId != null;
 
-  Iterable<int> get highlightedFigureIds =>
-      hasHighlightedFigureId ? [highlightedFigureId] : [];
+  Iterable<Figure> get highlightedFigures =>
+      figures.where((figure) => figure.id == highlightedFigureId);
 
   @override
   void ngOnInit() async {

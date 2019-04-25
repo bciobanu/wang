@@ -1,9 +1,10 @@
 import 'package:angular/angular.dart';
 import 'package:angular_components/material_button/material_button.dart';
-import 'package:angular_components/material_button/material_fab.dart';
 import 'package:angular_components/material_icon/material_icon.dart';
 import 'package:angular_components/material_spinner/material_spinner.dart';
-import 'package:panda/services/figures_service.dart';
+
+import 'package:panda/common/figure.dart';
+import 'name_editor.dart';
 
 @Component(
   selector: 'figure-editor',
@@ -12,48 +13,23 @@ import 'package:panda/services/figures_service.dart';
   directives: [
     coreDirectives,
     MaterialSpinnerComponent,
-    MaterialFabComponent,
     MaterialButtonComponent,
     MaterialIconComponent,
+    NameEditorComponent,
   ],
 )
 class FigureEditorComponent implements OnInit {
-  final FiguresService _figuresService;
-
   @Input()
-  int figureId;
+  Figure figure;
 
-  bool isFigureLoaded = false;
-  bool editingFigureName = false;
+  bool loaded = false;
 
-  FigureEditorComponent(this._figuresService);
+  void commit() async => await figure.commitCode();
 
-  Figure get figure => _figuresService.getFigure(figureId);
+  void compile() async => await figure.compile();
 
-  void setEditingFigureName() => editingFigureName = true;
-
-  void cancelEditingFigureName() => editingFigureName = false;
-
-  void commitFigureName() async {
-    await figure.commitName();
-    cancelEditingFigureName();
-  }
-
-  void commitFigureCode() async {
-    await figure.commitCode();
-  }
-
-  void compileFigure() async {
-    await figure.compile();
-  }
-
-  void setFigureDirtyCode(String dirtyCode) => figure.setDirtyCode(dirtyCode);
-
-  void setFigureDirtyName(String dirtyName) => figure.setDirtyName(dirtyName);
+  void setDirtyCode(String dirtyCode) => figure.setDirtyCode(dirtyCode);
 
   @override
-  void ngOnInit() async {
-    await figure.reloadCode();
-    isFigureLoaded = true;
-  }
+  void ngOnInit() async => await figure.reloadCode().then((_) => loaded = true);
 }

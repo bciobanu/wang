@@ -21,7 +21,7 @@
             <div class="centered" *ngIf="!hasHighlightedFigureId">
                 <em>No figure selected. Select a figure from the list to view & edit its code here.</em>
             </div>
-            <figure-editor *ngFor="let highlightedFigureId of highlightedFigureIds" [figureId]="highlightedFigureId">
+            <figure-editor *ngFor="let highlightedFigure of highlightedFigures" [figure]="highlightedFigure">
             </figure-editor>
         </div>
     </div>
