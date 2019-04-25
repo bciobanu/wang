@@ -13,7 +13,7 @@ pub struct Interpreter {
 impl Interpreter {
     pub(crate) fn new() -> Interpreter {
         let table = SymbolTable::new();
-        if let Value::Obj(ref mut map) = *table.env.borrow_mut() {
+        table.env.borrow_mut().as_obj_mut().map(|map| {
             map.insert("node".into(), new_obj(Value::Function(Function {
                 name: "node".into(),
                 args: vec!["title".into()],
@@ -24,9 +24,8 @@ impl Interpreter {
                 args: vec!["node1".into(), "node2".into()],
                 instr: Stms(Vec::new()),
             })));
-        } else {
-            panic!("env is not obj?!");
-        }
+            map
+        }).expect("env is not an obj?!");
         Interpreter {
             table: table
         }
@@ -82,13 +81,10 @@ impl Interpreter {
                 match left_res {
                     Val::Ptr(_) => Ok(right_res),
                     Val::Acc(ref rc, ref s) => {
-                        match *rc.borrow_mut() {
-                            Value::Obj(ref mut map) => {
-                                map.insert(s.clone(), right_res.clone().take_obj()?);
-                                Ok(Val::Ptr(right_res.take_obj()?))
-                            },
-                            _ => Err(()),
-                        }
+                        rc.borrow_mut().as_obj_mut().ok_or(()).and_then(|map| {
+                            map.insert(s.clone(), right_res.clone().take_obj()?);
+                            Ok(Val::Ptr(right_res.take_obj()?))
+                        })
                     },
                 }
             }
@@ -149,38 +145,31 @@ impl Interpreter {
     
     fn generate_code<W: Write>(&self, stream: &mut W) -> Result<(), ()> {
         stream.write_all(b"\\tikz ").map_err(|_| ())?;
-        match *self.table.env.borrow() {
-            Value::Obj(ref map) => {
-                let obj = map.get("root").ok_or(())?;
-                self.gen_for_node(stream, obj)
-            },
-            _ => Err(()),
-        }
+        self.table.env.borrow()
+                      .as_obj()
+                      .ok_or(())
+                      .and_then( |obj| self.gen_for_node(stream, obj.get("root").ok_or(())?) )
     }
 
     fn gen_for_node<W: Write>(&self, stream: &mut W, obj: &Obj) -> Result<(), ()> {
         stream.write_all(b"\\node {").map_err(|_| ())?;
         match *obj.borrow() {
             Value::Obj(ref map) => {
-                map.get("title").ok_or(()).and_then(
-                    |inner| match *inner.borrow() {
-                        Value::String(ref s) => stream.write_all(s.as_bytes()).map_err(|_| ()),
-                        _ => Err(()),
-                    }
-                )?;
+                map.get("title").and_then(
+                    |inner| inner.borrow()
+                                .as_string()
+                                .and_then(|s| stream.write_all(s.as_bytes()).ok())
+                ).ok_or(())?;
                 stream.write_all(b"} ").map_err(|_| ())?;
                 map.get("__sons__").ok_or(()).and_then(
-                    |inner| match *inner.borrow() {
-                        Value::List(ref sons) => {
-                            for son in sons {
-                                stream.write_all(b"child {").map_err(|_| ())?;
-                                self.gen_for_node(stream, son)?;
-                                stream.write_all(b"} ").map_err(|_| ())?;
-                            }
-                            Ok(())
-                        },
-                        _ => Err(())
-                    }
+                    |inner| inner.borrow().as_list().ok_or(()).and_then(|sons| {
+                        for son in sons {
+                            stream.write_all(b"child {").map_err(|_| ())?;
+                            self.gen_for_node(stream, son)?;
+                            stream.write_all(b"} ").map_err(|_| ())?;
+                        }
+                        Ok(())
+                    })
                 )?;
             },
             _ => return Err(()),
@@ -197,6 +186,43 @@ enum Value {
     List(Vec<Obj>),
     Function(Function),
     None,
+}
+
+impl Value {
+    fn as_string(&self) -> Option<&String> {
+        match *self {
+            Value::String(ref s) => Some(s),
+            _ => None,
+        }
+    }
+
+    fn as_obj(&self) -> Option<&HashMap<String, Obj>> {
+        match *self {
+            Value::Obj(ref obj) => Some(obj),
+            _ => None,
+        }
+    }
+
+    fn as_obj_mut(&mut self) -> Option<&mut HashMap<String, Obj>> {
+        match *self {
+            Value::Obj(ref mut obj) => Some(obj),
+            _ => None,
+        }
+    }
+
+    fn as_list(&self) -> Option<&Vec<Obj>> {
+        match *self {
+            Value::List(ref list) => Some(list),
+            _ => None,
+        }
+    }
+
+    fn as_list_mut(&mut self) -> Option<&mut Vec<Obj>> {
+        match *self {
+            Value::List(ref mut list) => Some(list),
+            _ => None,
+        }
+    }
 }
 
 type Obj = Rc<RefCell<Value>>;
@@ -268,32 +294,27 @@ impl SymbolTable {
 
 fn is_node(obj: &Obj) -> bool {
     if let Value::Obj(ref mut map) = *obj.borrow_mut() {
-        if let Some(obj) = map.get("__class__") {
-            if let Value::String(ref s) = *obj.borrow() {
-                if &*s == &"__builtin_node__"[..] {
-                    true
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
-        } else {
-            false
-        }
+        map.get("__class__")
+            .and_then(|obj| obj.borrow().as_string().map(|s| s == &"__builtin_node__"))
+            .unwrap_or(false)
     } else {
         false
     }
 }
 
-fn translate<R: Read, W: Write>(source: &mut R, compiled: &mut W) -> Result<(), ()> {
-    let byte_array: Vec<u8> = source.bytes().fold(Ok(Vec::new()),
-        |mut acc, x| { acc = acc.and_then(|mut vec| { vec.push(x.map_err(|_| ())?); Ok(vec) }); acc }
-    )?;
-    let source_code = crate::ast::p_source(&byte_array).map_err(|_| ())?.1;
+pub fn translate_slice<W: Write>(source: &[u8], compiled: &mut W) -> Result<(), ()> {
+    let source_code = crate::ast::p_source(source).map_err(|_| ())?.1;
     let mut interpreter = Interpreter::new();
     interpreter.run_stms(&source_code)?;
     interpreter.generate_code(compiled)
+}
+
+pub fn translate<R: Read, W: Write>(source: &mut R, compiled: &mut W) -> Result<(), ()> {
+    let mut byte_array: Vec<u8> = source.bytes().fold(Ok(Vec::new()),
+        |mut acc, x| { acc = acc.and_then(|mut vec| { vec.push(x.map_err(|_| ())?); Ok(vec) }); acc }
+    )?;
+    byte_array.push(b'#');
+    translate_slice(&byte_array, compiled)
 }
 
 
@@ -373,4 +394,5 @@ mod tests {
         let (interpreter, _) = simple_program();
         assert_eq!(interpreter.generate_code(&mut std::io::stdout()), Ok(()));
     }
+
 }
