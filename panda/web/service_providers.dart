@@ -7,19 +7,10 @@ import 'package:panda/services/auth_service.dart';
 import 'package:panda/services/figures_service.dart';
 import 'package:panda/services/rest_api_client_factory.dart';
 
-const serviceProviders = Module(provide: <Provider>[
+const serviceProviders = Module(provide: [
   ClassProvider(Client, useClass: BrowserClient),
-  FactoryProvider(
-    RestApiClient,
-    restApiClientFactory,
-    deps: [
-      Client,
-      apiOriginScheme,
-      apiOriginHost,
-      apiOriginPort,
-      apiOriginPathPrefix,
-    ],
-  ),
+  FactoryProvider(RestApiClient, restApiClientFactory,
+      deps: [Client, apiOrigin]),
   ClassProvider(AuthService),
   ClassProvider(FiguresService),
 ]);
