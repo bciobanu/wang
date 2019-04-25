@@ -5,12 +5,14 @@ import 'package:panda/services/rest_api_client.dart';
 
 class Figure {
   final int id;
-  final String name;
-  String code = null;
+  String _name;
+  String _code = null;
 
-  Figure(this.id, this.name, [this.code]);
+  Figure(this.id, this._name, [this._code]);
 
-  bool get hasCode => code != null;
+  bool get hasCode => _code != null;
+  String get code => _code;
+  String get name => _name;
 }
 
 @Injectable()
@@ -39,13 +41,23 @@ class FiguresService {
   void loadFigureCode(int id) async {
     final response = await _apiClient.fetchFigure(id);
     _figures.putIfAbsent(id, () => Figure(response['id'], response['name']));
-    _figures[id].code = response['code'];
+    _figures[id]._code = response['code'];
   }
 
   void createNewFigure() async {
     final name = _getNextFigureName();
     final figureId = await _apiClient.createFigure(name);
     _figures[figureId] = Figure(figureId, name, "");
+  }
+
+  void updateFigureName(int id, String name) async {
+//    await Future.delayed(Duration(seconds: 1));
+    final response = await _apiClient.put('/figure/$id', body: {
+      'name': name
+    });
+    if (response.statusCode == 201) {
+      _figures[id]._name = name;
+    }
   }
 
   String _getNextFigureName() {
