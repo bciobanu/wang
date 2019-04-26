@@ -11,7 +11,6 @@ class Figure {
 
   String _dirtyName = null;
   String _dirtyCode = null;
-
   bool _committingName = false;
   bool _committingCode = false;
   bool _compiling = false;

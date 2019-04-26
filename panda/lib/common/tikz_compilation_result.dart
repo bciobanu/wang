@@ -9,18 +9,14 @@ class TikzCompilationResult {
   final String tikzCode;
   final List<TikzCompilationError> errors;
 
-  TikzCompilationResult.successful(this.tikzCode) : this.errors = null;
+  TikzCompilationResult.successful(this.tikzCode) : this.errors = [];
 
   TikzCompilationResult.unsuccessful(List<dynamic> errors)
-      : this.errors = [],
-        this.tikzCode = null {
-    for (final error in errors) {
-      this.errors.add(TikzCompilationError(
-            error['code'],
-            error['description'],
-          ));
-    }
-  }
+      : this.errors = errors.map((e) => TikzCompilationError(
+              e['code'],
+              e['description'],
+            )).toList(growable: false),
+        this.tikzCode = null;
 
-  bool get isSuccessful => errors == null;
+  bool get isSuccessful => errors.isEmpty;
 }

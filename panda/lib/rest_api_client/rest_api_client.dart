@@ -11,7 +11,7 @@ class RestApiClient {
   RestApiClient(this._client, this._middleware);
 
   Future<RestApiResponse> get(String url) async {
-    return await _fetch('GET', url, null);
+    return await _fetch('GET', url);
   }
 
   Future<RestApiResponse> post(String url, Map<String, String> body) async {
@@ -23,7 +23,7 @@ class RestApiClient {
   }
 
   Future<RestApiResponse> _fetch(
-      String method, String url, Map<String, dynamic> body) async {
+      String method, String url, [Map<String, dynamic> body]) async {
     final requestBuilder = RestApiRequestBuilder(body)
       ..method = method
       ..url = Uri.parse(url);
