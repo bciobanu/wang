@@ -13,7 +13,13 @@ class RestApiRequestBuilder {
 
   RestApiRequestBuilder(this.body);
 
-  http.Request build() => http.Request(method, url)
-    ..headers.addAll(headers)
-    ..body = JsonEncoder().convert(body);
+  http.Request build() {
+    final request = http.Request(method, url);
+    request.headers.addAll(headers);
+    if (body != null) {
+      request.headers['Content-Type'] = 'application/json; charset=utf-8';
+      request.body = JsonEncoder().convert(body);
+    }
+    return request;
+  }
 }

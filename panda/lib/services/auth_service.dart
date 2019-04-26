@@ -14,7 +14,7 @@ class AuthService {
       'username': credentials.username,
       'password': credentials.password,
     });
-    if (response.statusCode == 200) {
+    if (response.statusCode != 200) {
       return Optional.of(response.body['message']);
     }
     return Optional.absent();

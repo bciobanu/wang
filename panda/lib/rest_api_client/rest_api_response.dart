@@ -1,19 +1,20 @@
 import 'package:http/http.dart';
 
 class RestApiResponseBuilder {
+  final Request httpRequest;
   final Response httpResponse;
 
   int statusCode;
   dynamic body;
 
-  RestApiResponseBuilder(this.httpResponse)
+  RestApiResponseBuilder(this.httpRequest, this.httpResponse)
       : statusCode = httpResponse.statusCode,
         body = httpResponse.body;
 
-  RestApiResponseBuilder.networkError()
+  RestApiResponseBuilder.networkError(this.httpRequest)
       : httpResponse = null,
         statusCode = -1,
-        body = {'message': 'Network error.'};
+        body = <String, dynamic>{'message': 'Network error.'};
 
   RestApiResponse build() =>
       RestApiResponse._(this.httpResponse, this.statusCode, this.body);

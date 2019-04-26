@@ -6,9 +6,9 @@ import 'rest_api_response.dart';
 
 class RestApiClient {
   final http.Client _client;
-  final List<Middleware> _middlewares;
+  final List<Middleware> _middleware;
 
-  RestApiClient(this._client, this._middlewares);
+  RestApiClient(this._client, this._middleware);
 
   Future<RestApiResponse> get(String url) async {
     return await _fetch('GET', url, null);
@@ -28,20 +28,22 @@ class RestApiClient {
       ..method = method
       ..url = Uri.parse(url);
 
-    for (final middleware in _middlewares) {
+    for (final middleware in _middleware) {
       middleware.onRequest(requestBuilder);
     }
 
+    final request = requestBuilder.build();
+
     RestApiResponseBuilder responseBuilder;
     try {
-      final streamedResponse = await _client.send(requestBuilder.build());
-      final response = await http.Response.fromStream(streamedResponse);
-      responseBuilder = RestApiResponseBuilder(response);
+      final response =
+          await http.Response.fromStream(await _client.send(request));
+      responseBuilder = RestApiResponseBuilder(request, response);
     } catch (error) {
-      responseBuilder = RestApiResponseBuilder.networkError();
+      responseBuilder = RestApiResponseBuilder.networkError(request);
     }
 
-    for (final middleware in _middlewares) {
+    for (final middleware in _middleware) {
       if (!middleware.onResponse(responseBuilder)) {
         break;
       }
