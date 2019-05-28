@@ -22,4 +22,4 @@ wang.iml
 
 /beetle/package-lock.json
 /beetle/node_modules/
-/beetle/sqlite.db
+/beetle/*.db
