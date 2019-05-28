@@ -14,7 +14,7 @@ const ValidatorFactory = require('../../helpers/validatorFactory')
 const validatorFactory = new ValidatorFactory()
 
 // Load napoca configuration
-const napocaConfig = require('../../config/napocaconfig')
+const napocaConfig = require('../../appConfig/napocaconfig')
 const napoca_client = require('napoca-client')
 const napocaClient = new napoca_client.NapocaClient("localhost:" + napocaConfig.port)
 

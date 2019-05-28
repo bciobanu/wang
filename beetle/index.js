@@ -2,7 +2,7 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 
-const DB = require('./config/dbconfig')
+const DB = require('./appConfig/dbconfig')
 DB.init()
 
 app.listen(3000, () => {

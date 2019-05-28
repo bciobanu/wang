@@ -1,6 +1,7 @@
 let sqlite3 = require('sqlite3').verbose()
+let config = require('config')
 
-let db = new sqlite3.Database('./sqlite.db')
+let db = new sqlite3.Database(config.DBHost)
 
 let init = function () {
     db.run("CREATE TABLE if not exists user (" + 
