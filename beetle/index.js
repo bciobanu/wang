@@ -23,4 +23,7 @@ app.use(bodyParser.json())
 const REST_API_ROOT = '/api'
 app.use(REST_API_ROOT, require('./routes/router'))
 
-module.exports = server
+module.exports = {
+    server: server,
+    DB: DB
+}
