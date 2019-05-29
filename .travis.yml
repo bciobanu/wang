@@ -15,4 +15,4 @@ script:
 # Build & test the Napoca client
   - cd napoca-client && npm install && npm test && cd ..
 # Build Beetle API
-  - cd beetle && npm install && cd ..
+  - cd beetle && npm install && sudo npm install -g mocha && npm test && cd ..
