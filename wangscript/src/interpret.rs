@@ -5,9 +5,11 @@ use std::rc::Rc;
 use std::cell::{RefCell, Ref, RefMut};
 use std::io::{Read, Write};
 use std::dbg;
+use std::fmt;
 
 pub struct Interpreter {
     table: SymbolTable,
+    stdout: String,
 }
 
 impl Interpreter {
@@ -24,16 +26,44 @@ impl Interpreter {
                 args: vec!["node1".into(), "node2".into()],
                 instr: Stms(Vec::new()),
             })));
-            map
+            map.insert("write".into(), new_obj(Value::Function(Function {
+                name: "write".into(),
+                args: vec!["obj".into()],
+                instr: Stms(Vec::new()),
+            })));
         }).expect("env is not an obj?!");
         Interpreter {
-            table: table
+            table: table,
+            stdout: String::new(),
         }
     }
     pub(crate) fn run_stm(&mut self, stm: &Stm) -> Result<(), ()> {
         match *stm {
             Stm::Block(ref stms) => self.run_stms(stms)?,
             Stm::Single(ref expr) => { self.eval_expr(expr)?; },
+            Stm::While(ref expr, ref stm) => {
+                loop {
+                    let val = self.eval_expr(expr)?;
+                    let int_val = val.take_obj()?
+                                     .borrow()
+                                     .as_int()
+                                     .ok_or(())?;
+                    if int_val == 0 {
+                        break;
+                    }
+                    self.run_stm(&stm.p)?;
+                }
+            },
+            Stm::If(ref expr, ref stm) => {
+                let val = self.eval_expr(expr)?;
+                let int_val = val.take_obj()?
+                                    .borrow()
+                                    .as_int()
+                                    .ok_or(())?;
+                if int_val != 0 {
+                    self.run_stm(&stm.p)?;
+                }
+            },
         }
         Ok(())
     }
@@ -60,7 +90,7 @@ impl Interpreter {
                     },
                     _ => Err(())
                 }
-            }, // TODO: evaluate this
+            },
         }
     }
 
@@ -69,26 +99,168 @@ impl Interpreter {
             Atom::Integer(val) => Ok(Val::new(Value::Integer(val))),
             Atom::Str(ref val) => Ok(Val::new(Value::String(val.clone()))),
             Atom::Exp(ref expr) => self.eval_expr(&*expr.p),
-            Atom::Ident(ref ident) => Ok(Val::Acc(self.table.env.clone(), ident.clone())),
+            Atom::Ident(ref ident) => Ok(Val::Acc(self.table.env.clone(), AccessItem::String(ident.clone()))),
+            Atom::ListConstruct(ref args) => {
+                let mut ret = Vec::new();
+                for expr in args.0.iter() {
+                    ret.push(self.eval_expr(expr)?.take_obj()?);
+                }
+                Ok(Val::Ptr(new_obj(Value::List(ret))))
+            },
+            Atom::DictConstruct(ref _args) => panic!(),
+            Atom::None => Ok(Val::Ptr(none_obj())),
         }
     }
 
-    fn apply_op(&mut self, op: Ops, left: &Atom, right: &Expr) -> Result<Val, ()> {
+    fn apply_op(&mut self, op: Ops, left: &Expr, right: &Expr) -> Result<Val, ()> {
+        let left_res = self.eval_expr(left)?;
+        let right_res = self.eval_expr(right)?;
         match op {
             Ops::Asg => {
-                let left_res = self.eval_atom(left)?;
-                let right_res = self.eval_expr(right)?;
                 match left_res {
                     Val::Ptr(_) => Ok(right_res),
                     Val::Acc(ref rc, ref s) => {
-                        rc.borrow_mut().as_obj_mut().ok_or(()).and_then(|map| {
-                            map.insert(s.clone(), right_res.clone().take_obj()?);
-                            Ok(Val::Ptr(right_res.take_obj()?))
-                        })
+                        let right_obj = right_res.clone().take_obj()?;
+                        match *rc.borrow_mut() {
+                            Value::Obj(ref mut map) => {
+                                map.insert(s.as_string().ok_or(())?.clone(), right_obj.clone());
+                                Ok(Val::Ptr(right_obj))
+                            },
+                            Value::List(ref mut list) => {
+                                let pos = s.as_int().ok_or(())?;
+                                if pos < 0 || pos >= list.len() as i64 {
+                                    Err(())
+                                } else {
+                                    list[pos as usize] = right_obj.clone();
+                                    Ok(Val::Ptr(right_obj))
+                                }
+                            },
+                            _ => Err(()),
+                        }
                     },
                 }
+            },
+            Ops::Acc => {
+                match *right_res.take_obj()?.borrow() {
+                    Value::String(ref s) => left_res.access(AccessItem::String(s.clone())),
+                    Value::Integer(s) => left_res.access(AccessItem::Integer(s)),
+                    _ => Err(()),
+                }
+            },
+            _ => {
+                let left_obj = left_res.take_obj()?;
+                let right_obj = right_res.take_obj()?;
+                let borrow = left_obj.borrow();
+                match op {
+                    Ops::Add => {
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                *val + right_obj.borrow().as_int().ok_or(())?
+                            )))),
+                            Value::List(ref val) => Ok(Val::Ptr(new_obj(Value::List({
+                                let mut ret = val.clone();
+                                ret.append(&mut right_obj.borrow().as_list().ok_or(())?.clone());
+                                ret
+                            })))),
+                            Value::String(ref val) => Ok(Val::Ptr(new_obj(Value::String(
+                                val.clone() + &right_obj.borrow().as_string().ok_or(())?
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Sub => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                *val - right_obj.borrow().as_int().ok_or(())?
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Mul => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                *val * right_obj.borrow().as_int().ok_or(())?
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Div => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                *val / right_obj.borrow().as_int().ok_or(())?
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Mod => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                *val % right_obj.borrow().as_int().ok_or(())?
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Lt => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                if *val < right_obj.borrow().as_int().ok_or(())? { 1 } else { 0 }
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Gt => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                if *val > right_obj.borrow().as_int().ok_or(())? { 1 } else { 0 }
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Le => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                if *val <= right_obj.borrow().as_int().ok_or(())? { 1 } else { 0 }
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Ge => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                if *val >= right_obj.borrow().as_int().ok_or(())? { 1 } else { 0 }
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Eq => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                if *val == right_obj.borrow().as_int().ok_or(())? { 1 } else { 0 }
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    Ops::Ne => {
+                        let borrow = left_obj.borrow();
+                        match *borrow {
+                            Value::Integer(ref val) => Ok(Val::Ptr(new_obj(Value::Integer(
+                                if *val != right_obj.borrow().as_int().ok_or(())? { 1 } else { 0 }
+                            )))),
+                            _ => Err(()),
+                        }
+                    },
+                    _ => Err(()),
+                }
             }
-            _ => Err(()) // TODO: Implement this
         }
     }
 
@@ -100,6 +272,7 @@ impl Interpreter {
             // Handle builtins
             "node" => self.eval_node_function(f, args),
             "edge" => self.eval_edge_function(f, args),
+            "write" => self.eval_write_function(f, args),
             _ => Err(()),
         }
     }
@@ -138,8 +311,17 @@ impl Interpreter {
                     })
                     .ok_or(())?
             },
-            _ => panic!("it is not an object ?!"),
+            _ => panic!("is it not an object ?!"),
         }
+        Ok(Val::Ptr(none_obj()))
+    }
+
+    fn eval_write_function(&mut self, _f: &Function, args: &[Obj]) -> Result<Val, ()> {
+        if args.len() != 1 {
+            panic!("node call with wrong number of arguments");
+        }
+        use std::fmt::Write;
+        write!(&mut self.stdout, "{}", args[0].borrow()).map_err(|_| ())?;
         Ok(Val::Ptr(none_obj()))
     }
     
@@ -148,7 +330,13 @@ impl Interpreter {
         self.table.env.borrow()
                       .as_obj()
                       .ok_or(())
-                      .and_then( |obj| self.gen_for_node(stream, obj.get("root").ok_or(())?) )
+                      .and_then( |obj| {
+                          let root = obj.get("root");
+                          if let None = root {
+                              return Ok(());
+                          }
+                          self.gen_for_node(stream, root.unwrap())
+                      })
     }
 
     fn gen_for_node<W: Write>(&self, stream: &mut W, obj: &Obj) -> Result<(), ()> {
@@ -179,7 +367,7 @@ impl Interpreter {
 }
 
 #[derive(Debug, PartialEq)]
-enum Value {
+pub(crate) enum Value {
     Integer(i64),
     String(String),
     Obj(HashMap<String, Obj>),
@@ -188,36 +376,74 @@ enum Value {
     None,
 }
 
+impl fmt::Display for Value {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match *self {
+            Value::Integer(s) => write!(f, "{}", s),
+            Value::String(ref s) => write!(f, "\"{}\"", s),
+            Value::Obj(ref m) => {
+                write!(f, "{{")?;
+                for (i, key) in m.keys().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "\"{}\": {}", key, &m[key].borrow())?;
+                }
+                write!(f, "}}")
+            },
+            Value::List(ref list) => {
+                write!(f, "[")?;
+                for (i, v) in list.iter().enumerate() {
+                    if i > 0 {
+                        write!(f, ", ")?;
+                    }
+                    write!(f, "{}", &v.borrow())?;
+                }
+                write!(f, "]")
+            },
+            Value::Function(_) => write!(f, "<function>"),
+            Value::None => write!(f, "None"),
+        }
+    }
+}
+
 impl Value {
-    fn as_string(&self) -> Option<&String> {
+    pub(crate) fn as_string(&self) -> Option<&String> {
         match *self {
             Value::String(ref s) => Some(s),
             _ => None,
         }
     }
 
-    fn as_obj(&self) -> Option<&HashMap<String, Obj>> {
+    pub(crate) fn as_int(&self) -> Option<i64> {
+        match *self {
+            Value::Integer(s) => Some(s),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_obj(&self) -> Option<&HashMap<String, Obj>> {
         match *self {
             Value::Obj(ref obj) => Some(obj),
             _ => None,
         }
     }
 
-    fn as_obj_mut(&mut self) -> Option<&mut HashMap<String, Obj>> {
+    pub(crate) fn as_obj_mut(&mut self) -> Option<&mut HashMap<String, Obj>> {
         match *self {
             Value::Obj(ref mut obj) => Some(obj),
             _ => None,
         }
     }
 
-    fn as_list(&self) -> Option<&Vec<Obj>> {
+    pub(crate) fn as_list(&self) -> Option<&Vec<Obj>> {
         match *self {
             Value::List(ref list) => Some(list),
             _ => None,
         }
     }
 
-    fn as_list_mut(&mut self) -> Option<&mut Vec<Obj>> {
+    pub(crate) fn as_list_mut(&mut self) -> Option<&mut Vec<Obj>> {
         match *self {
             Value::List(ref mut list) => Some(list),
             _ => None,
@@ -225,43 +451,69 @@ impl Value {
     }
 }
 
-type Obj = Rc<RefCell<Value>>;
+pub(crate) type Obj = Rc<RefCell<Value>>;
 
-fn new_obj(value: Value) -> Obj {
+pub(crate) fn new_obj(value: Value) -> Obj {
     Rc::new(RefCell::new(value))
 }
 
-fn none_obj() -> Obj {
+pub(crate) fn none_obj() -> Obj {
     new_obj(Value::None)
 }
 
 #[derive(Clone, Debug)]
-enum Val {
+pub(crate) enum AccessItem {
+    Integer(i64),
+    String(String),
+}
+
+impl AccessItem {
+    pub(crate) fn as_string(&self) -> Option<&String> {
+        match *self {
+            AccessItem::String(ref s) => Some(s),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn as_int(&self) -> Option<i64> {
+        match *self {
+            AccessItem::Integer(s) => Some(s),
+            _ => None,
+        }
+    }
+}
+
+#[derive(Clone, Debug)]
+pub(crate) enum Val {
     Ptr(Obj),
-    Acc(Obj, String)
+    Acc(Obj, AccessItem)
 }
 
 impl Val {
-    fn new(value: Value) -> Val {
+    pub(crate) fn new(value: Value) -> Val {
         Val::Ptr(Rc::new(RefCell::new(value)))
     }
 
-    fn take_obj(self) -> Result<Obj, ()> {
+    pub(crate) fn take_obj(self) -> Result<Obj, ()> {
         match self {
             Val::Ptr(obj) => Ok(obj),
             Val::Acc(obj, s) => match *obj.borrow() {
-                Value::Obj(ref map) => map.get(&s).ok_or(()).map(|x| x.clone()),
+                Value::Obj(ref map) => map.get(s.as_string().ok_or(())?).ok_or(()).map(|x| x.clone()),
+                Value::List(ref list) => list.get(s.as_int().ok_or(())? as usize).ok_or(()).map(|x| x.clone()),
                 _ => Err(()),
             }
         }
     }
 
-    fn access(&self, s: String) -> Result<Val, ()> {
+    pub(crate) fn access(&self, s: AccessItem) -> Result<Val, ()> {
         match *self {
             Val::Ptr(ref rc) => Ok(Val::Acc(rc.clone(), s)),
             Val::Acc(ref rc, ref s1) => {
                 match *rc.borrow() {
-                    Value::Obj(ref map) => Ok(Val::Acc(map.get(s1).map(
+                    Value::Obj(ref map) => Ok(Val::Acc(map.get(s1.as_string().ok_or(())?).map(
+                       |x| x.clone()
+                    ).ok_or(()).map_err(|_| panic!("{:?}", s1))?, s)),
+                    Value::List(ref list) => Ok(Val::Acc(list.get(s1.as_int().ok_or(())? as usize).map(
                        |x| x.clone()
                     ).ok_or(())?, s)),
                     _ => Err(()),
@@ -302,6 +554,13 @@ fn is_node(obj: &Obj) -> bool {
     }
 }
 
+pub fn get_stdout(source: &[u8]) -> Result<String, ()> {
+    let source_code = crate::ast::p_source(source).map_err(|_| panic!("here"))?.1;
+    let mut interpreter = Interpreter::new();
+    interpreter.run_stms(&source_code)?;
+    Ok(interpreter.stdout.clone())
+}
+
 pub fn translate_slice<W: Write>(source: &[u8], compiled: &mut W) -> Result<(), ()> {
     let source_code = crate::ast::p_source(source).map_err(|_| ())?.1;
     let mut interpreter = Interpreter::new();
@@ -326,12 +585,12 @@ mod tests {
         let program = Stms(vec![
             Stm::Single(Expr::Op(
                 Ops::Asg,
-                P::new(Atom::Ident("a".into())),
+                P::new(Expr::Atm(P::new(Atom::Ident("a".into())))),
                 P::new(Expr::Atm(P::new(Atom::Str("Abc".into())))),
             )),
             Stm::Single(Expr::Op(
                 Ops::Asg,
-                P::new(Atom::Ident("b".into())),
+                P::new(Expr::Atm(P::new(Atom::Ident("b".into())))),
                 P::new(Expr::Call(
                     P::new(Atom::Ident("node".into())),
                     Args(vec![
@@ -341,7 +600,7 @@ mod tests {
             )),
             Stm::Single(Expr::Op(
                 Ops::Asg,
-                P::new(Atom::Ident("root".into())),
+                P::new(Expr::Atm(P::new(Atom::Ident("root".into())))),
                 P::new(Expr::Call(
                     P::new(Atom::Ident("node".into())),
                     Args(vec![
@@ -354,6 +613,12 @@ mod tests {
                 Args(vec![
                     Expr::Atm( P::new(Atom::Ident("root".into())) ),
                     Expr::Atm( P::new(Atom::Ident("b".into())) ),
+                ])
+            )),
+            Stm::Single(Expr::Call(
+                P::new(Atom::Ident("write".into())),
+                Args(vec![
+                    Expr::Atm( P::new(Atom::Ident("root".into())) ),
                 ])
             ))
         ]);
@@ -380,6 +645,7 @@ mod tests {
         if let Value::Obj(ref mut map) = *interpreter.table.env.borrow_mut() {
             map.remove("node");
             map.remove("edge");
+            map.remove("write");
         }
         (interpreter, pred_env)
     }

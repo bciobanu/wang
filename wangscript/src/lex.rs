@@ -6,11 +6,19 @@ pub(crate) enum DelimType {
     Close,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub(crate) enum OpType {
     Add,
     Sub,
     Mul,
+    Div,
+    Mod,
+    Lt,
+    Gt,
+    Le,
+    Ge,
+    Eq,
+    Ne,
     Asg,
 }
 
@@ -18,10 +26,19 @@ pub(crate) enum OpType {
 pub(crate) enum SepType {
     Comma,
     SemiCol,
+    Dot,
+}
+
+#[derive(Debug, PartialEq)]
+pub(crate) enum Keyword {
+    While,
+    If,
+    None,
 }
 
 #[derive(Debug, PartialEq)]
 pub(crate) enum Token {
+    Keyword(Keyword),
     Ident(String),
     Str(String),
     Number(String),
@@ -85,10 +102,34 @@ fn slice_to_op(s: &[u8]) -> OpType {
         b"+" => OpType::Add,
         b"-" => OpType::Sub,
         b"*" => OpType::Mul,
+        b"/" => OpType::Div,
+        b"%" => OpType::Mod,
+        b"<=" => OpType::Le,
+        b">=" => OpType::Ge,
+        b"<" => OpType::Lt,
+        b">" => OpType::Gt,
+        b"==" => OpType::Eq,
+        b"!=" => OpType::Ne,
         b"=" => OpType::Asg,
         _ => panic!("wrong operator"),
     }
 }
+
+named!(pub(crate) p_keyword<&[u8], Token>,
+    preceded!(p_spaces,
+        alt!(
+            map!(
+                tag!("while"), |_| Token::Keyword(Keyword::While)
+            ) |
+            map!(
+                tag!("if"), |_| Token::Keyword(Keyword::If)
+            ) |
+            map!(
+                tag!("None"), |_| Token::Keyword(Keyword::None)
+            )
+        )
+    )
+);
 
 named!(pub(crate) p_op<&[u8], Token>,
     preceded!(p_spaces, map!(
@@ -96,6 +137,15 @@ named!(pub(crate) p_op<&[u8], Token>,
                 tag!("+") |
                 tag!("-") |
                 tag!("*") |
+                tag!("/") |
+                tag!("%") |
+                tag!("<=") |
+                tag!(">=") |
+                tag!("<") |
+                tag!(">") |
+                tag!("==") |
+                tag!("!=") |
+                tag!(".") |
                 tag!("=")
             ),
             |x| Token::Op(slice_to_op(x))
@@ -107,6 +157,7 @@ fn char_to_sep(c: char) -> SepType {
     match c {
         ',' => SepType::Comma,
         ';' => SepType::SemiCol,
+        '.' => SepType::Dot,
         _ => panic!("wrong sep type")
     }
 }
@@ -119,6 +170,7 @@ named!(pub(crate) p_sep<&[u8], Token>,
 
 named!(pub(crate) p_token<&[u8], Token>,
     alt!(
+        p_keyword |
         p_ident |
         p_number |
         p_str |
