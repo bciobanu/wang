@@ -4,26 +4,26 @@
 <div class="editor-container" *ngIf="loaded">
     <h2>
         <name-editor [figure]="figure"></name-editor>
-        <material-button style="float: right; position: relative"
+        <material-button class="action-button"
                          [disabled]="figure.isCompiling"
                          (trigger)="compile()">
             <div class="white-button-overlay" [style.opacity]="figure.isCompiling ? '0.4' : '0'">
-                <material-spinner *ngIf="figure.isCompiling" style="margin: 0 auto;"></material-spinner>
+                <material-spinner *ngIf="figure.isCompiling"></material-spinner>
             </div>
             <material-icon icon="settings"></material-icon>
             Compile
         </material-button>
-        <material-button style="float: right; position: relative"
+        <material-button class="action-button"
                          [disabled]="!figure.hasDirtyCode || figure.committingCode"
                          (trigger)="commit()">
             <div class="white-button-overlay" [style.opacity]="figure.committingCode ? '0.4' : '0'">
-                <material-spinner *ngIf="figure.committingCode" style="margin: 0 auto;"></material-spinner>
+                <material-spinner *ngIf="figure.committingCode"></material-spinner>
             </div>
             <material-icon icon="save"></material-icon>
             Save
         </material-button>
     </h2>
-    <text-editor [value]="figure.dirtyCode" (changes)="setDirtyCode($event)" style="display: block;">
+    <text-editor [value]="figure.dirtyCode" (changes)="setDirtyCode($event)">
     </text-editor>
     <div *ngIf="figure.hasCompilationResult" style="flex: 1; margin-top: 20px;">
         <h3 *ngIf="figure.compilationResult.isSuccessful">Tikz code:</h3>

@@ -16,6 +16,11 @@
     flex-direction: column;
 }
 
+.action-button {
+    float: right;
+    position: relative;
+}
+
 .white-button-overlay {
     position: absolute;
     top: 0;
@@ -25,6 +30,10 @@
     background-color: white;
     display: flex;
     align-items: center;
+}
+
+.white-button-overlay:nth-child(1) {
+    margin: 0 auto;
 }
 
 .compilation-result-container {
