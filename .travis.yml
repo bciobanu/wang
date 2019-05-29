@@ -1,18 +1,30 @@
-language: rust
-script:
-# Install protocol buffer compiler
-  - PROTOC_ZIP=protoc-3.7.1-linux-x86_64.zip
-  - curl -OL https://github.com/google/protobuf/releases/download/v3.7.1/$PROTOC_ZIP
-  - sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
-  - rm -f $PROTOC_ZIP
-# Install NodeJS
-  - sudo apt-get install npm
-# Install python3
-  - sudo apt-get install python3
-# Build & test rust code
-  - cargo build --verbose --all
-  - cargo test --verbose --all
-# Build & test the Napoca client
-  - cd napoca-client && npm install && npm test && cd ..
-# Build Beetle API
-  - cd beetle && npm install && cd ..
+matrix:
+  include:
+    # wangscript & napoca
+    - language: rust
+      addons:
+        apt:
+          packages:
+            - python3
+            - npm
+      before_script:
+        # Install protocol buffer compiler
+        - PROTOC_ZIP=protoc-3.7.1-linux-x86_64.zip
+        - curl -OL https://github.com/google/protobuf/releases/download/v3.7.1/$PROTOC_ZIP
+        - sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
+        - rm -f $PROTOC_ZIP
+      script:
+        - cargo build --verbose --all
+        - cargo test --verbose --all
+        - cd napoca-client && npm install && npm test && cd ..
+    # bettle
+    - language: node_js
+      node_js:
+        - "10.13"
+      before_install:
+        - npm i -g npm@6.4.1
+      before_script:
+        - npm config set strict-ssl false
+        - npm install -g mocha
+      script:
+        - cd beetle && npm install && npm test && cd ..

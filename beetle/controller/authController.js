@@ -8,7 +8,7 @@ const ControllerCommon = require('./commons/controllerCommon')
 const User = require('../model/user')
 
 // Load auth configuration
-const authconfig = require('../config/authconfig')
+const authconfig = require('../appConfig/authconfig')
 
 // Load JSON Web Token
 const jwt = require('jsonwebtoken')

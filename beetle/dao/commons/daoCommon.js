@@ -1,5 +1,5 @@
 // Load db configuration
-const DB = require('../../config/dbconfig')
+const DB = require('../../appConfig/dbconfig')
 
 // Load DaoError entity
 const DaoError = require('./daoError')

@@ -2,10 +2,10 @@ const express = require('express')
 const app = express()
 const bodyParser = require('body-parser')
 
-const DB = require('./config/dbconfig')
+const DB = require('./appConfig/dbconfig')
 DB.init()
 
-app.listen(3000, () => {
+const server = app.listen(3000, () => {
     console.log('Server is up and listening on 3000')
 })
 
@@ -23,4 +23,7 @@ app.use(bodyParser.json())
 const REST_API_ROOT = '/api'
 app.use(REST_API_ROOT, require('./routes/router'))
 
-module.exports = app
+module.exports = {
+    server: server,
+    DB: DB
+}

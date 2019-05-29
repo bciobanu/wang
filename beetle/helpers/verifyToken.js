@@ -2,7 +2,7 @@
 const jwt = require('jsonwebtoken')
 
 // Load auth configuration
-const authconfig = require('../config/authconfig')
+const authconfig = require('../appConfig/authconfig')
 
 // middleware method that verifies a token and identifies its owner
 function verifyToken(req, res, next) {
