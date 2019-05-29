@@ -11,9 +11,10 @@ import 'package:angular_components/material_spinner/material_spinner.dart';
   styleUrls: ['text_editor.css'],
   directives: [coreDirectives, MaterialSpinnerComponent],
 )
-class TextEditorComponent implements OnInit {
+class TextEditorComponent implements OnInit, AfterViewChecked {
   static _AceLoadState _aceLoadState = _AceLoadState.notLoaded;
   static Future<void> _aceLoadFuture;
+  static int _uniqueEditorId = 1;
 
   static Future<void> _loadAce() async {
     if (_aceLoadState == _AceLoadState.notLoaded) {
@@ -27,8 +28,7 @@ class TextEditorComponent implements OnInit {
       document.head.append(scriptTag);
 
       Timer.periodic(const Duration(milliseconds: 10), (Timer t) {
-        print(context["ace"]);
-        if (context["ace"] != null) {
+        if (context['ace'] != null) {
           t.cancel();
           _aceLoadState = _AceLoadState.loaded;
           aceLoadCompleter.complete();
@@ -47,14 +47,35 @@ class TextEditorComponent implements OnInit {
 
   bool loaded = false;
 
-  final _changesController = StreamController<String>();
+  final String uniqueId = 'ace-editor-${_uniqueEditorId++}';
 
-  void onChange(String newContent) => _changesController.add(newContent);
+  dynamic _editor = null;
+
+  final _changesController = StreamController<String>();
 
   @override
   void ngOnInit() async {
     await _loadAce();
     loaded = true;
+  }
+
+  @override
+  void ngAfterViewChecked() {
+    if (!loaded) {
+      return;
+    }
+    if (_editor == null) {
+      _bindAce();
+    }
+  }
+
+  void _bindAce() {
+    _editor = context['ace']['edit'].apply([uniqueId]);
+    _editor['session']['on'].apply([
+      'change',
+      (_) => _changesController
+          .add(_editor['getValue'].apply([], thisArg: _editor))
+    ], thisArg: _editor);
   }
 }
 
