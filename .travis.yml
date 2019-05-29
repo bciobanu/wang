@@ -6,7 +6,8 @@ script:
   - sudo unzip -o $PROTOC_ZIP -d /usr/local bin/protoc
   - rm -f $PROTOC_ZIP
 # Install NodeJS
-  - sudo apt-get install npm
+  - sudo apt-get install nodejs
+  - sudo npm install -g mocha
 # Install python3
   - sudo apt-get install python3
 # Build & test rust code
@@ -15,4 +16,4 @@ script:
 # Build & test the Napoca client
   - cd napoca-client && npm install && npm test && cd ..
 # Build Beetle API
-  - cd beetle && npm install && sudo npm install -g mocha && npm test && cd ..
+  - cd beetle && npm install && npm test && cd ..
