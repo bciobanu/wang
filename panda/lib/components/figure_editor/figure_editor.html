@@ -23,9 +23,8 @@
             Save
         </material-button>
     </h2>
-    <textarea #codeEditor style="font-family: monospace; resize: none; height: 320px;"
-              (input)="setDirtyCode(codeEditor.value)" [value]="figure.dirtyCode">
-    </textarea>
+    <text-editor [value]="figure.dirtyCode" (changes)="setDirtyCode($event)" style="display: block;">
+    </text-editor>
     <div *ngIf="figure.hasCompilationResult" style="flex: 1; margin-top: 20px;">
         <h3 *ngIf="figure.compilationResult.isSuccessful">Tikz code:</h3>
         <h3 *ngIf="!figure.compilationResult.isSuccessful">Tikz compiled with errors:</h3>
