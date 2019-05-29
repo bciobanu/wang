@@ -1,3 +1,7 @@
-<textarea #codeEditor style="font-family: monospace; resize: none; height: 320px; width: 100%;"
-          (input)="onChange(codeEditor.value)" [value]="value">
+<material-spinner *ngIf="!loaded"></material-spinner>
+<textarea *ngIf="loaded"
+          #codeEditor
+          style="font-family: monospace; resize: none; height: 320px; width: 100%;"
+          (input)="onChange(codeEditor.value)"
+          [value]="value">
 </textarea>
