@@ -4,6 +4,7 @@ import 'package:angular_components/material_icon/material_icon.dart';
 import 'package:angular_components/material_spinner/material_spinner.dart';
 
 import 'package:panda/common/figure.dart';
+import 'package:panda/components/text_editor/text_editor.dart';
 import 'name_editor.dart';
 
 @Component(
@@ -16,6 +17,7 @@ import 'name_editor.dart';
     MaterialButtonComponent,
     MaterialIconComponent,
     NameEditorComponent,
+    TextEditorComponent,
   ],
 )
 class FigureEditorComponent implements OnInit {

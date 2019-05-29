@@ -1,0 +1,4 @@
+<material-spinner *ngIf="!loaded"></material-spinner>
+<div *ngIf="loaded" [id]="uniqueId" class="inner-text-editor">
+    {{value}}
+</div>
