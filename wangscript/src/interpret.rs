@@ -10,6 +10,7 @@ use std::fmt;
 pub struct Interpreter {
     table: SymbolTable,
     stdout: String,
+    generate_list: Vec<Obj>,
 }
 
 impl Interpreter {
@@ -31,10 +32,21 @@ impl Interpreter {
                 args: vec!["obj".into()],
                 instr: Stms(Vec::new()),
             })));
+            map.insert("str".into(), new_obj(Value::Function(Function {
+                name: "str".into(),
+                args: vec!["obj".into()],
+                instr: Stms(Vec::new()),
+            })));
+            map.insert("generate".into(), new_obj(Value::Function(Function {
+                name: "generate".into(),
+                args: vec!["obj".into()],
+                instr: Stms(Vec::new()),
+            })));
         }).expect("env is not an obj?!");
         Interpreter {
             table: table,
             stdout: String::new(),
+            generate_list: Vec::new(),
         }
     }
     pub(crate) fn run_stm(&mut self, stm: &Stm) -> Result<(), ()> {
@@ -273,6 +285,8 @@ impl Interpreter {
             "node" => self.eval_node_function(f, args),
             "edge" => self.eval_edge_function(f, args),
             "write" => self.eval_write_function(f, args),
+            "str" => self.eval_str_function(f, args),
+            "generate" => self.eval_generate_function(f, args),
             _ => Err(()),
         }
     }
@@ -324,23 +338,40 @@ impl Interpreter {
         write!(&mut self.stdout, "{}", args[0].borrow()).map_err(|_| ())?;
         Ok(Val::Ptr(none_obj()))
     }
-    
-    fn generate_code<W: Write>(&self, stream: &mut W) -> Result<(), ()> {
-        stream.write_all(b"\\tikz ").map_err(|_| ())?;
-        self.table.env.borrow()
-                      .as_obj()
-                      .ok_or(())
-                      .and_then( |obj| {
-                          let root = obj.get("root");
-                          if let None = root {
-                              return Ok(());
-                          }
-                          self.gen_for_node(stream, root.unwrap())
-                      })
+
+    fn eval_str_function(&mut self, _f: &Function, args: &[Obj]) -> Result<Val, ()> {
+        if args.len() != 1 {
+            panic!("node call with wrong number of arguments");
+        }
+        let mut ret = String::new();
+        use std::fmt::Write;
+        write!(&mut ret, "{}", args[0].borrow()).map_err(|_| ())?;
+        Ok(Val::Ptr(new_obj(Value::String(ret))))
     }
 
-    fn gen_for_node<W: Write>(&self, stream: &mut W, obj: &Obj) -> Result<(), ()> {
-        stream.write_all(b"\\node{").map_err(|_| ())?;
+    fn eval_generate_function(&mut self, _f: &Function, args: &[Obj]) -> Result<Val, ()> {
+        if args.len() != 1 {
+            panic!("node call with wrong number of arguments");
+        }
+        self.generate_list.push(args[0].clone());
+        Ok(Val::Ptr(none_obj()))
+    }
+    
+    fn generate_code<W: Write>(&self, stream: &mut W) -> Result<(), ()> {
+        stream.write_all(b"\\begin{forest}\n").map_err(|_| ())?;
+        for obj in self.generate_list.iter() {
+            if is_node(obj) {
+                self.gen_for_node(stream, obj, true)?;
+            }
+        }
+        stream.write_all(b"\n\\end{forest} ").map_err(|_| ())
+    }
+
+    fn gen_for_node<W: Write>(&self, stream: &mut W, obj: &Obj, _root: bool) -> Result<(), ()> {
+        // if root {
+        //     stream.write_all(b"[").map_err(|_| ())?;
+        // }
+        stream.write_all(b"[").map_err(|_| ())?;
         match *obj.borrow() {
             Value::Obj(ref map) => {
                 map.get("title").and_then(
@@ -348,17 +379,17 @@ impl Interpreter {
                                 .as_string()
                                 .and_then(|s| stream.write_all(s.as_bytes()).ok())
                 ).ok_or(())?;
-                stream.write_all(b"} ").map_err(|_| ())?;
                 map.get("__sons__").ok_or(()).and_then(
                     |inner| inner.borrow().as_list().ok_or(()).and_then(|sons| {
                         for son in sons {
-                            stream.write_all(b"child { ").map_err(|_| ())?;
-                            self.gen_for_node(stream, son)?;
-                            stream.write_all(b" }").map_err(|_| ())?;
+                            // stream.write_all(b" child { ").map_err(|_| ())?;
+                            self.gen_for_node(stream, son, false)?;
+                            stream.write_all(b",").map_err(|_| ())?;
                         }
                         Ok(())
                     })
                 )?;
+                stream.write_all(b"] ").map_err(|_| ())?;
             },
             _ => return Err(()),
         }
@@ -555,7 +586,7 @@ fn is_node(obj: &Obj) -> bool {
 }
 
 pub fn get_stdout(source: &[u8]) -> Result<String, ()> {
-    let source_code = crate::ast::p_source(source).map_err(|_| panic!("here"))?.1;
+    let source_code = crate::ast::p_source(source).map_err(|_| ())?.1;
     let mut interpreter = Interpreter::new();
     interpreter.run_stms(&source_code)?;
     Ok(interpreter.stdout.clone())
@@ -620,7 +651,13 @@ mod tests {
                 Args(vec![
                     Expr::Atm( P::new(Atom::Ident("root".into())) ),
                 ])
-            ))
+            )),
+            Stm::Single(Expr::Call(
+                P::new(Atom::Ident("generate".into())),
+                Args(vec![
+                    Expr::Atm( P::new(Atom::Ident("root".into())) ),
+                ])
+            )),
         ]);
         let mut pred_env = HashMap::new();
         pred_env.insert("a".into(), new_obj(Value::String("Abc".into())));
@@ -646,6 +683,8 @@ mod tests {
             map.remove("node");
             map.remove("edge");
             map.remove("write");
+            map.remove("str");
+            map.remove("generate");
         }
         (interpreter, pred_env)
     }
