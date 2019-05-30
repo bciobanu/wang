@@ -71,4 +71,28 @@ mod tests {
             Ok("[0, 2, 3, 5, 7, 11, 13, 17, 19, 23, 29]".to_string())
         );
     }
+
+    #[test]
+    fn build_tree() {
+        let program = br###"
+        n = 7;
+        nodes = [node(str(0))];
+        i = 1;
+        while (i <= n) {
+            nodes = nodes + [ node(str(i)) ];
+            edge(nodes[i / 2], nodes[i]);
+            write(i);
+            i = i + 1;
+        }
+        generate(nodes[0]);
+        #"###;
+        use crate::interpret::{get_stdout, translate_slice};
+        assert_eq!(
+            get_stdout(&program[..]).map(|_| ()),
+            Ok(())
+        );
+        let mut v = Vec::<u8>::new();
+        translate_slice(&program[..], &mut v).unwrap();
+        println!("{}", String::from_utf8(v).unwrap());
+    }
 }
